@@ -399,11 +399,15 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"Dendrite hotkey counts: {hotkey_counts}")
         if len(hotkey_counts) != 1:
             bt.logging.warning(f"Multiple unique dendrite.hotkeys found: {list(hotkey_counts.keys())}")
+            for response in responses:                
+                bt.logging.warning(f"IP {response.axon.ip} | dhk: {response.dendrite.hotkey} | ahk: {response.axon.hotkey} | uid: {response.miner_uid}")
             return False
         uuids = [r.dendrite.uuid for r in responses]
         uuid_counts = Counter(uuids)
         if len(uuid_counts) != 1:
             bt.logging.warning(f"Multiple unique dendrite UUIDs found: {list(uuid_counts.keys())}")
+            for response in responses:
+                bt.logging.warning(f"IP {response.axon.ip} | dhk: {response.dendrite.hotkey} | ahk: {response.axon.hotkey} | uid: {response.miner_uid}")
             return False
         return True
 
