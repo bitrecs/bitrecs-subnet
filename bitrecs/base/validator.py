@@ -451,8 +451,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         pass #continue prevents regular val loop
 
                     if synapse_with_event is not None and api_enabled: #API request
-                        bt.logging.info("** Processing synapse from API server **")                        
+                        bt.logging.info("** Processing synapse from API server **")
                         bt.logging.info(f"Queue Size: {API_QUEUE.qsize()}")
+                        bt.logging.info(f"R Limit: {self.r_limit}")
                         
                         if not validate_br_request(synapse_with_event.input_synapse):
                             bt.logging.error("Request failed Validation, skipped.")
