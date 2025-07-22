@@ -499,10 +499,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
                         if not self.check_response_structure(responses):
-                            bt.logging.error("\033[31mResponse structure check failed, skipping this batch\033[0m")
+                            #bt.logging.error("\033[31mResponse structure check failed, skipping this batch\033[0m")
                             self.bad_set_count += 1
-                            synapse_with_event.event.set()
-                            continue
+                            #synapse_with_event.event.set()
+                            #continue
 
                         rewards = get_rewards(self.wallet.hotkey.ss58_address,
                                               ground_truth=api_request,
