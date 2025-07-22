@@ -850,13 +850,17 @@ class BaseValidatorNeuron(BaseNeuron):
             return
         if uids_array is None:
             uids_array = []
-        
+
+        decay_count = 0
         bt.logging.info(f"Decaying scores for suspect miners: {self.suspect_miners}")
         for suspect_uid in self.suspect_miners:
             if suspect_uid not in uids_array and 0 <= suspect_uid < len(self.scores):
-                old_score = self.scores[suspect_uid]
+                #old_score = self.scores[suspect_uid]
                 self.scores[suspect_uid] *= SUSPECT_MINER_DECAY
-                bt.logging.info(f"\033[33mDecayed suspect miner UID {suspect_uid}: {old_score:.6f} -> {self.scores[suspect_uid]:.6f} \033[0m")
+                decay_count += 1
+                #bt.logging.trace(f"\033[33mDecayed suspect miner UID {suspect_uid}: {old_score:.6f} -> {self.scores[suspect_uid]:.6f} \033[0m")
+        if decay_count > 0:
+            bt.logging.trace(f"\033[33mDecayed {decay_count} suspect miners\033[0m")
                 
 
     def update_successful_scores(self, rewards: np.ndarray, uids: list[int]):
