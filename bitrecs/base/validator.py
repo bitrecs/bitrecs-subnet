@@ -529,6 +529,7 @@ class BaseValidatorNeuron(BaseNeuron):
                                     bt.logging.warning(f"Orphan UID {uid}: potential reward={reward:.4f}")
                                 if CONST.REWARD_ORPHANS:
                                     self.update_successful_scores(rewards, chosen_uids)
+                                    bt.logging.trace(f"\033[32mOrphans rewarded with {BASE_REWARD:.4f} each\033[0m")
                             self.decay_suspects()
                             synapse_with_event.event.set()
                             continue
