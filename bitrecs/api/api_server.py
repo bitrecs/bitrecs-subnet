@@ -460,10 +460,10 @@ class ApiServer:
             response_text = "Bitrecs Subnet {} Took {:.2f} seconds to process this request".format(self.network, subnet_time)
             bt.logging.trace(response_text)
 
-            if not CONST.MIN_NUM_RESULTS <= len(response.results) <= CONST.MAX_NUM_RESULTS:
-                bt.logging.error(f"API forward_fn response has num_recs out of bounds: {len(response.results)}")
-                return JSONResponse(status_code=500,
-                                    content={"detail": "error - forward", "status_code": 500})
+            # if not CONST.MIN_NUM_RESULTS <= len(response.results) <= CONST.MAX_NUM_RESULTS:
+            #     bt.logging.error(f"API forward_fn response has num_recs out of bounds: {len(response.results)}")
+            #     return JSONResponse(status_code=500,
+            #                         content={"detail": "error - forward", "status_code": 500})
 
             if len(response.results) != request.num_results:
                 bt.logging.error(f"API forward_fn response has a num_recs mismatch")
