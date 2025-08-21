@@ -14,8 +14,8 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 
 dependencies = [
-    "bittensor==9.8.2",
-    "bittensor-cli==9.8.4",
+    "bittensor==9.9.0",
+    "bittensor-cli==9.10.1",
     "substrate-interface==1.7.11",
     "cryptography==45.0.4",
     "starlette==0.37.2",
