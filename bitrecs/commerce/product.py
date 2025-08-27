@@ -149,9 +149,10 @@ class ProductFactory:
                 result.append(Product(sku=sku, name=name, price=price))
         except Exception as e:
             bt.logging.error(f"try_parse_context_strict Exception: {e}")
-            return []        
+            return []
         
-        result.sort(key=operator.attrgetter('name'))
+        #result.sort(key=operator.attrgetter('name'))
+        result = sorted(result, key=lambda x: (x.sku.lower(), x.name.lower()))
         return result
 
    

@@ -549,7 +549,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             top_k = await self.analyze_similar_requests(good_responses)
                             if top_k:
                                 winner = safe_random.sample(top_k, 1)[0]
-                                selected_rec = responses.index(winner)                                
+                                selected_rec = responses.index(winner)
                                 
                                 MIN_UNIQUE_ENTITIES = 2
                                 FRACTION_UNIQUE_ENTITIES = 0.67
@@ -595,14 +595,14 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.user = ""
                         elected.models_used = [CONST.RE_MODEL_NAME.sub("", m) for m in elected.models_used]
                         
-                        bt.logging.info(f"\033[1;32mFINAL UID: {elected.miner_uid}\033[0m")
-                        bt.logging.info(f"\033[1;32mFINAL HOTKEY: {elected.axon.hotkey[:8]}\033[0m")
-                        bt.logging.info(f"\033[1;32mFINAL MODEL: {elected.models_used}\033[0m")
-                        bt.logging.info(f"\033[1;32mFINAL BATCH: {elected.site_key}\033[0m")
-                        bt.logging.info(f"\033[1;32mFINAL RESULT: {elected}\033[0m")
+                        bt.logging.info(f"\033[1;32mUID: {elected.miner_uid}\033[0m")
+                        bt.logging.info(f"\033[1;32mHOTKEY: {elected.axon.hotkey[:16]}\033[0m")
+                        bt.logging.info(f"\033[1;32mMODEL: {elected.models_used}\033[0m")
+                        bt.logging.info(f"\033[1;32mBATCH: {elected.site_key}\033[0m")
+                        bt.logging.info(f"\033[1;32mRESULT: {elected}\033[0m")
                         if consensus_bonus_applied:
-                            bt.logging.info(f"\033[1;32mCONSENSUS BONUS APPLIED: x {CONSENSUS_BONUS_MULTIPLIER}\033[0m")
-                        bt.logging.info(f"\033[1;32mFINAL SCORE: {rewards[selected_rec]}\033[0m")
+                            bt.logging.info(f"\033[1;32mBONUS MULTIPLIER {CONSENSUS_BONUS_MULTIPLIER}\033[0m")
+                        bt.logging.info(f"\033[1;32mSCORE: {rewards[selected_rec]}\033[0m")
                         
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
@@ -618,7 +618,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.update_scores(rewards, chosen_uids)
                         loop = asyncio.get_event_loop()
                         loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
-                        bt.logging.trace(f"SQL logging submitted to thread pool - step {self.step}")
+                        #bt.logging.trace(f"SQL logging submitted to thread pool - step {self.step}")
                         
                     else:
                         if not api_exclusive:
