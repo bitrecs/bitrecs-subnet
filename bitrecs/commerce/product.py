@@ -222,6 +222,21 @@ class ProductFactory:
         if match:
             return match.group(1)
         return ""
+    
+
+    @staticmethod
+    def find_sku_name_slow(target_sku: str, catalog_json: str) -> str:
+        """
+        Slower but more robust method to find SKU name in JSON catalog.
+        Parses the JSON and searches for the SKU.
+        """
+        try:
+            products = ProductFactory.try_parse_context_strict(catalog_json)
+            match = next((p for p in products if p.sku.lower() == target_sku.lower()), None)
+            return match.name if match else ""
+        except Exception as e:
+            bt.logging.error(f"Error in find_sku_name_slow: {e}")
+            return ""
 
 
         

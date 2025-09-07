@@ -1,3 +1,5 @@
+import json
+import requests
 from openai import OpenAI
 
 class OpenRouter:    
@@ -16,7 +18,7 @@ class OpenRouter:
         self.temp = temp
 
 
-    def call_open_router(self, prompt) -> str:
+    def call_open_router_legacy(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 
@@ -37,7 +39,58 @@ class OpenRouter:
                 "content": prompt,
             }],
             temperature=self.temp,
-            max_tokens=2048
+            max_tokens=2048,
+            reasoning_effort="low"            
         )
+
         thing = completion.choices[0].message.content                
-        return thing
+        return thing    
+
+
+    def call_open_router(self, prompt) -> str:
+        if not prompt or len(prompt) < 10:
+            raise ValueError()
+
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bitrecs.ai",
+            "X-Title": "bitrecs"
+        }
+        payload = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "user", 
+                    "content": prompt
+                }],
+            "reasoning": {
+                "exclude": True,
+                "effort": "low"
+            },
+            "stream": False,
+            "temperature": self.temp
+        }
+        
+        timeout = (5, 30) #connect, read timeout
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                data=json.dumps(payload),
+                timeout=timeout
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data['choices'][0]['message']['content']
+        except requests.exceptions.ConnectTimeout:
+            raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
+        except requests.exceptions.ReadTimeout:
+            raise TimeoutError(f"OpenRouter read timed out after {timeout[1]}s")
+        except requests.exceptions.RequestException as e:
+            # bubble up other network / HTTP errors
+            raise RuntimeError(f"OpenRouter request failed: {e}") from e
+        
+        
+    

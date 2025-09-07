@@ -2,7 +2,11 @@ import os
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import time
-import pytest
+import pytest    
+import sqlite3
+import concurrent.futures
+from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
@@ -686,4 +690,197 @@ def test_call_openai_route_gpt4_and_gpt5_ok():
 
 
 
+#@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+def test_call_grok_code_fast():
+    raw_products = product_woo()      
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)
+    print(f"\033[32mSelected product: {match.sku} - {match.name} \033[0m")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
     
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")        
+    
+    
+    model = "x-ai/grok-code-fast-1"
+    provider = LLM.OPEN_ROUTER
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    st = time.time()
+    llm_response = LLMFactory.query_llm(server=provider,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, 
+                                 user_prompt=prompt)
+    et = time.time()
+    diff = et - st  
+    print(f"LLM response time: {diff:.2f} seconds")
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+    assert len(parsed_recs) == num_recs    
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+    assert user_prompt not in skus
+
+    
+
+
+
+def query_llm_with_timeout(server, model, system_prompt, temp, user_prompt, timeout=30):   
+    with ThreadPoolExecutor(max_workers=1) as ex:
+        fut = ex.submit(
+            LLMFactory.query_llm,
+            server,
+            model,
+            system_prompt,
+            temp,
+            user_prompt
+        )
+        try:
+            return fut.result(timeout=timeout)
+        except concurrent.futures.TimeoutError as e:
+            fut.cancel()
+            raise TimeoutError(f"LLM query timed out after {timeout} seconds") from e
+
+
+def test_cycle_models_and_store_results():   
+    db_path = "./tests/llm_results.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS llm_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT,
+            model TEXT,
+            prompt TEXT,
+            raw_response TEXT,
+            parsed_json TEXT,
+            parsed_count INTEGER,
+            requested_num_recs INTEGER,
+            duration REAL,
+            timestamp TEXT,
+            success INTEGER,
+            error TEXT
+        )
+        """
+    )
+    conn.commit()
+
+    
+    #raw_products = product_1k()
+    raw_products = product_shopify()
+    #raw_products = product_woo()
+    products = ProductFactory.dedupe(raw_products)
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku
+    num_recs = 3
+    
+    context = json.dumps([asdict(p) for p in products], separators=(',', ':'))
+    factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, debug=True)
+    prompt = factory.generate_prompt()
+
+    providers = [
+
+        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-code-fast-1"},
+        {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-maverick:free"},
+        {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
+        #{"provider": LLM.OPEN_ROUTER, "model": "nousresearch/hermes-4-70b"},
+        {"provider": LLM.OPEN_ROUTER, "model": "inception/mercury-coder"},
+        {"provider": LLM.OPEN_ROUTER, "model": "mistralai/mistral-small-3.2-24b-instruct"},
+
+        #{"provider": LLM.OPEN_ROUTER, "model": "z-ai/glm-4.5-air:free"},
+        #{"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-lite-preview-06-17"},
+        {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-lite"},
+        {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-scout"},
+        {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-4.1-nano"},
+        {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-5-nano"},
+
+        {"provider": LLM.OPEN_ROUTER, "model": "moonshotai/kimi-k2-0905"},
+        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
+        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
+        
+        {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-30b-a3b-instruct-2507"},
+        {"provider": LLM.OPEN_ROUTER, "model": "ai21/jamba-mini-1.7"}
+        #{"provider": LLM.OPEN_ROUTER, "model": "minimax/minimax-m1"},
+
+    ]
+    
+    safe_random.shuffle(providers)
+    #providers = providers[:3]
+
+    success_count = 0
+    for entry in providers:
+        provider = entry["provider"]
+        model = entry["model"]
+        start = time.time()
+        raw_resp = None
+        parsed_recs = None
+        parsed_count = 0
+        success = 0
+        error_msg = None
+        try:
+            print(f"Querying {provider} with model {model}...")          
+            raw_resp = query_llm_with_timeout(
+                server=provider,
+                model=model,
+                system_prompt="You are a helpful assistant",
+                temp=0.0,
+                user_prompt=prompt,
+                timeout=30
+            )
+            parsed_recs = PromptFactory.tryparse_llm(raw_resp)
+            parsed_count = len(parsed_recs) if parsed_recs else 0
+            success = 1 if parsed_count == num_recs else 0
+            success_count += success
+                 
+        except Exception as e:
+            error_msg = repr(e)
+            success = 0
+        finally:
+            duration = time.time() - start
+            timestamp = datetime.now(timezone.utc).isoformat()
+            cur.execute(
+                """
+                INSERT INTO llm_results
+                (provider, model, prompt, raw_response, parsed_json, parsed_count, requested_num_recs, duration, timestamp, success, error)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(provider),
+                    str(model),
+                    prompt,
+                    raw_resp,
+                    json.dumps(parsed_recs, default=str) if parsed_recs is not None else None,
+                    parsed_count,
+                    num_recs,
+                    duration,
+                    timestamp,
+                    success,
+                    error_msg,
+                ),
+            )
+            conn.commit()
+
+    conn.close()
+    
+    assert success_count == len(providers), f"Not all provider/model combinations succeeded: {success_count} out of {len(providers)}"

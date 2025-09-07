@@ -98,6 +98,7 @@ class OpenRouterInterface:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
                             system_prompt=self.system_prompt, temp=self.temp)
         return router.call_open_router(user_prompt)
+        
     
     
 class ChatGPTInterface:
