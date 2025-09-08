@@ -14,21 +14,17 @@ def test_specific_example_dates():
     for dt, expected in cases:
         assert get_current_ecommerce_event(dt) == expected
 
-def test_naive_datetime_is_interpreted_as_utc():
-    # naive datetime should be treated as UTC by the function
-    naive = datetime(2025, 2, 10)  # no tzinfo
+def test_naive_datetime_is_interpreted_as_utc():    
+    naive = datetime(2025, 2, 10) # no tzinfo
     assert get_current_ecommerce_event(naive) == "Valentine's Day"
 
-def test_current_utc_date_returns_str_or_none():
-    # don't assert a specific event for "now" — only check type
+def test_current_utc_date_returns_str_or_none():    
     evt = get_current_ecommerce_event()
     assert evt is None or isinstance(evt, str)
 
-def test_new_year_span_includes_jan_2():
-    # Dates in early January should be included in New Year's Sales
+def test_new_year_span_includes_jan_2():    
     dt = datetime(2025, 1, 2, tzinfo=pytz.UTC)
     assert get_current_ecommerce_event(dt) == "New Year's Sales"
 
-if __name__ == "__main__":
-    # Run tests when executed directly
+if __name__ == "__main__":    
     raise SystemExit(pytest.main([__file__]))

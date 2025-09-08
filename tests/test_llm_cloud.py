@@ -690,7 +690,7 @@ def test_call_openai_route_gpt4_and_gpt5_ok():
 
 
 
-#@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+@pytest.mark.skip(reason="skipped - open_router_missing_provider")
 def test_call_grok_code_fast():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -718,6 +718,7 @@ def test_call_grok_code_fast():
     
     
     model = "x-ai/grok-code-fast-1"
+    #model = "ai21/jamba-mini-1.7"    
     provider = LLM.OPEN_ROUTER
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
@@ -794,7 +795,7 @@ def test_cycle_models_and_store_results():
     rp = safe_random.choice(products)
     user_prompt = rp.sku
     num_recs = 3
-    
+
     context = json.dumps([asdict(p) for p in products], separators=(',', ':'))
     factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, debug=True)
     prompt = factory.generate_prompt()
@@ -816,12 +817,11 @@ def test_cycle_models_and_store_results():
         {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-5-nano"},
 
         {"provider": LLM.OPEN_ROUTER, "model": "moonshotai/kimi-k2-0905"},
-        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
-        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
-        
         {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-30b-a3b-instruct-2507"},
-        {"provider": LLM.OPEN_ROUTER, "model": "ai21/jamba-mini-1.7"}
-        #{"provider": LLM.OPEN_ROUTER, "model": "minimax/minimax-m1"},
+        {"provider": LLM.OPEN_ROUTER, "model": "ai21/jamba-mini-1.7"},
+
+        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
+        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"}
 
     ]
     
@@ -854,6 +854,7 @@ def test_cycle_models_and_store_results():
             success_count += success
                  
         except Exception as e:
+            print(f"Error querying {provider} with model {model}: {e}")
             error_msg = repr(e)
             success = 0
         finally:

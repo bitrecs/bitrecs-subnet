@@ -61,8 +61,8 @@ class PromptFactory:
 
         if len(sku) < CONST.MIN_QUERY_LENGTH or len(sku) > CONST.MAX_QUERY_LENGTH:
             raise ValueError(f"SKU must be between {CONST.MIN_QUERY_LENGTH} and {CONST.MAX_QUERY_LENGTH} characters long")
-        if num_recs < 1 or num_recs > CONST.MAX_RECS_PER_REQUEST:
-            raise ValueError(f"num_recs must be between 1 and {CONST.MAX_RECS_PER_REQUEST}")
+        if num_recs < CONST.MIN_RECS_PER_REQUEST or num_recs > CONST.MAX_RECS_PER_REQUEST:
+            raise ValueError(f"num_recs must be between {CONST.MIN_RECS_PER_REQUEST} and {CONST.MAX_RECS_PER_REQUEST}")
 
         self.sku = sku
         self.context = context
@@ -73,8 +73,8 @@ class PromptFactory:
         self.cart_json = "[]"
         self.orders = []
         self.order_json = "[]"
-        self.season =  PromptFactory.SEASON       
-        self.engine_mode = PromptFactory.ENGINE_MODE 
+        self.season =  PromptFactory.SEASON
+        self.engine_mode = PromptFactory.ENGINE_MODE
         if not profile:
             self.persona = "ecommerce_retail_store_manager"
         else:
@@ -90,8 +90,8 @@ class PromptFactory:
         
         #self.sku_info = ProductFactory.find_sku_name(self.sku, self.context)
         self.sku_info = ProductFactory.find_sku_name_slow(self.sku, self.context)
-        bt.logging.trace(f"Prompt Factory {self.sku} - {self.sku_info}, persona: {self.persona}, num_recs: {self.num_recs}, cart items: {len(self.cart)}")
-        self.current_event = get_current_ecommerce_event(current_date=datetime.now(tz=timezone.utc))
+        self.current_event = get_current_ecommerce_event(current_date=datetime.now(tz=timezone.utc)) or ""
+        bt.logging.trace(f"Prompt Factory {self.sku} - {self.sku_info}, persona: {self.persona}, num_recs: {self.num_recs}, cart: {len(self.cart)}, orders: {len(self.orders)}, current_event: {self.current_event}")
 
 
     def _sort_cart_keys(self, cart: List[dict]) -> List[str]:
@@ -126,7 +126,7 @@ class PromptFactory:
         prompt = f"""# SCENARIO
     A shopper is viewing a product with SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> on your e-commerce store.
     They are looking for {self.engine_mode} products to add to their cart.
-    You will build a recommendation set with no duplicates based on the provided context and your persona qualities.
+    You will build a {self.num_recs} product recommendation set with no duplicates based on the provided context and your persona attributes.
         
     # YOUR PERSONA
     <persona>{self.persona}</persona>
@@ -140,6 +140,7 @@ class PromptFactory:
 
     <seasonality>
     Current season: <season>{season}</season>
+    Seasonal event: <event>{self.current_event}</event>
     Todays date: {today}
     </seasonality>
 
@@ -169,6 +170,7 @@ class PromptFactory:
     Apply comprehensive analysis using all available inputs: product attributes from the context, user cart history, seasonal relevance, pricing considerations and your persona's <core_attributes> to create a cohesive recommendation set.
     Apply guidance_on_emphasis on core_attributes and seasonality as specified above.
     Do **not** recommend products that are already in the cart.
+
     # INPUT
     Query SKU: <sku>{self.sku}</sku><sku_info>{self.sku_info}</sku_info>
 
@@ -199,7 +201,7 @@ class PromptFactory:
     - Return items should be ordered by relevance/profitability, the first being your top recommendation.
     - Each item must have a reason explaining why the product is a good recommendation for the {self.engine_mode} set.
     - The reason should be a single succinct sentence consisting of plain words without punctuation, or line breaks.
-    - You will be graded on your reason so make sure to provide a good reason for each recommendation which is relevant to the Query SKU and its role in the {self.engine_mode} set.
+    - You will be graded on your reason so make sure to provide a good reason for each recommendation which is relevant to the Query SKU and how it fits in the overall {self.engine_mode} set.
     - No explanations or text outside the JSON array.
 
     Example format:

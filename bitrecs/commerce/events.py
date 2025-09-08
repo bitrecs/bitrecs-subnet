@@ -2,7 +2,7 @@ import pytz
 from datetime import datetime, timedelta
 
 
-def get_current_ecommerce_event(current_date=None):
+def get_current_ecommerce_event(current_date=None) -> str | None:
     """
     Determines the current e-commerce event based on the provided UTC date/time.
     If no date is provided, uses the current system date/time in UTC.
@@ -72,14 +72,14 @@ def get_current_ecommerce_event(current_date=None):
          lambda y: utc.localize(datetime(y, 12, 1)), 
          lambda y: utc.localize(datetime(y, 12, 25, 23, 59, 59))),
 
-        # Boxing Day: December 26
+        # Boxing Week: December 26 - December 30
          ("Boxing Day", 
          lambda y: utc.localize(datetime(y, 12, 26)), 
-         lambda y: utc.localize(datetime(y, 12, 26, 23, 59, 59))),
+         lambda y: utc.localize(datetime(y, 12, 29, 23, 59, 59))),
         
         # New Year's Sales: December 29 to January 5
         ("New Year's Sales", 
-         lambda y: utc.localize(datetime(y, 12, 29)), 
+         lambda y: utc.localize(datetime(y, 12, 30)),
          lambda y: utc.localize(datetime(y+1, 1, 5, 23, 59, 59)))
     ]
 
