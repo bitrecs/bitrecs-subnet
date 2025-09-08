@@ -166,6 +166,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
+        self.dendrite_timeout = min(10, CONST.MAX_DENDRITE_TIMEOUT)
               
         self.total_uids = set()
         self.batch_seen_uids = set()
@@ -299,7 +300,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.warning(f"Too few requests to analyze: {len(requests)} on step {self.step}")
             return
         
-        async def get_dynamic_top_n(num_requests: int, min_n: int = 2, max_n: int = 8, min_requests: int = 2, max_requests: int = 14) -> int:
+        async def get_dynamic_top_n(num_requests: int, min_n: int = 2, max_n: int = 8, min_requests: int = 2, max_requests: int = CONST.QUERY_BATCH_SIZE) -> int:
             if num_requests <= min_requests:
                 return min_n
             if num_requests >= max_requests:
@@ -473,11 +474,11 @@ class BaseValidatorNeuron(BaseNeuron):
                         responses = await self.dendrite.forward(
                             axons = chosen_axons, 
                             synapse = api_request,
-                            timeout = min(8, CONST.MAX_DENDRITE_TIMEOUT),
+                            timeout = self.dendrite_timeout,
                             deserialize=False,
                             run_async=True
                         )
-                        #TODO: 503 error handling async bug?
+                        #Retry logic
                         any_success = any([r for r in responses if r.is_success])
                         if not any_success:
                             bt.logging.error("\033[1;33mRETRY ATTEMPT\033[0m")
@@ -485,7 +486,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             responses = await self.dendrite.forward(
                                 axons = chosen_axons, 
                                 synapse = api_request,
-                                timeout = min(8, CONST.MAX_DENDRITE_TIMEOUT),
+                                timeout = self.dendrite_timeout,
                                 deserialize=False,
                                 run_async=True
                             )
@@ -503,6 +504,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not self.check_response_structure(responses):                            
                             bt.logging.error("\033[1;31m Invalid response structure detected - skipping batch \033[0m")
                             self.bad_set_count += 1
+                            loop = asyncio.get_event_loop()
+                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, None, None)
                             synapse_with_event.event.set()
                             continue
 
@@ -575,18 +578,18 @@ class BaseValidatorNeuron(BaseNeuron):
                         else:
                             bt.logging.error(f"\033[1;33mNo valid candidates in {len(responses)} responses, request aborted.\033[0m")
                             self.update_scores(rewards, chosen_uids)
-                            loop = asyncio.get_event_loop()
-                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)
                             self.bad_set_count += 1
+                            loop = asyncio.get_event_loop()
+                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)                            
                             synapse_with_event.event.set()
                             continue
                         
                         if selected_rec is None:
                             bt.logging.error(f"\033[1;31mNo consensus rec elected in {len(responses)} responses, request aborted.\033[0m")
                             self.update_scores(rewards, chosen_uids)
-                            loop = asyncio.get_event_loop()
-                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)
                             self.bad_set_count += 1
+                            loop = asyncio.get_event_loop()
+                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)                            
                             synapse_with_event.event.set()
                             continue
                     
@@ -595,13 +598,13 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.user = ""
                         elected.models_used = [CONST.RE_MODEL_NAME.sub("", m) for m in elected.models_used]
                         
-                        bt.logging.info(f"\033[1;32mUID: {elected.miner_uid}\033[0m")
+                        bt.logging.info(f"\033[1;32mMINER: {elected.miner_uid}\033[0m")
                         bt.logging.info(f"\033[1;32mHOTKEY: {elected.axon.hotkey[:16]}\033[0m")
                         bt.logging.info(f"\033[1;32mMODEL: {elected.models_used}\033[0m")
                         bt.logging.info(f"\033[1;32mBATCH: {elected.site_key}\033[0m")
                         bt.logging.info(f"\033[1;32mRESULT: {elected}\033[0m")
                         if consensus_bonus_applied:
-                            bt.logging.info(f"\033[1;32mBONUS MULTIPLIER {CONSENSUS_BONUS_MULTIPLIER}\033[0m")
+                            bt.logging.info(f"\033[1;32mCONSENSUS AWARDED\033[0m")
                         bt.logging.info(f"\033[1;32mSCORE: {rewards[selected_rec]}\033[0m")
                         
                         if len(elected.results) == 0:

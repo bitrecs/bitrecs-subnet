@@ -34,7 +34,7 @@ from bitrecs.utils.reasoning import ReasonReport
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-USE_REASONING_ADJUSTMENT = False
+USE_REASONING_ADJUSTMENT = True
 USE_DIFFICULTY_ADJUSTMENT = False
 SUSPECT_MINER_DECAY = 0.980
 
@@ -218,7 +218,7 @@ def reward(
                     return 0.0
                 if not catalog_validator.validate_sku(sku):
                     bt.logging.error(f"{response.miner_uid} has invalid results: {response.miner_hotkey[:8]}")
-                    return 0.00
+                    return 0.0
                 
                 valid_items.add(sku)
             except Exception as e:
