@@ -1,6 +1,7 @@
 import os
 import requests
 import bittensor as bt
+from typing import List
 from dataclasses import dataclass, field    
 from bitrecs import __version__ as this_version
 
@@ -8,6 +9,7 @@ from bitrecs import __version__ as this_version
 @dataclass
 class ReasonReport:
     created_at: str = field(default_factory=str)
+    scored_on: str = field(default_factory=str)
     miner_hotkey: str = field(default_factory=str)
     f_score: float = field(default=0.0)
     evaluated: int = field(default=0)
@@ -15,7 +17,7 @@ class ReasonReport:
 
     
     @staticmethod
-    def get_reports() -> list["ReasonReport"]:
+    def get_reports() -> List["ReasonReport"]:
         """
         Load latest reasoning scores
         """
@@ -25,8 +27,8 @@ class ReasonReport:
             reason_url = f"{proxy_url}/reasoning"
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {os.environ.get('BITRECS_API_KEY')}",            
-                'User-Agent': f'Bitrecs-Node/{this_version}'
+                "Authorization": f"Bearer {os.environ.get('BITRECS_API_KEY')}",
+                "User-Agent": f"Bitrecs-Node/{this_version}"
             }        
             report_json = requests.get(reason_url, headers=headers).json()
             data = report_json.get("data", [])
@@ -37,6 +39,7 @@ class ReasonReport:
             for item in data:
                 report = ReasonReport(
                     created_at=item.get("created_at", ""),
+                    scored_on=item.get("scored_on", ""),
                     miner_hotkey=item.get("miner_hotkey", ""),
                     evaluated=item.get("evaluated", 0),
                     f_score=item.get("f_score", 0.0),
@@ -46,5 +49,18 @@ class ReasonReport:
             sorted_reports = sorted(reports, key=lambda x: x.rank, reverse=False)
             return sorted_reports
         except Exception as e:
-            bt.logging.error(f"load_user_actions Exception: {e}")     
+            bt.logging.error(f"load_user_actions Exception: {e}")
         
+
+    @staticmethod
+    def get_delta_uids(reports: List["ReasonReport"], metagraph: "bt.metagraph.Metagraph" ) -> List[int]:
+        """Find the delta of reports vs metagraph UIDs."""
+        delta_uids = []
+        report_hotkeys = [r.miner_hotkey for r in reports]
+        for uid in range(metagraph.n.item()):
+            if uid == 0:
+                continue
+            hk = metagraph.axons[uid].hotkey
+            if hk not in report_hotkeys:
+                delta_uids.append(uid)
+        return delta_uids
