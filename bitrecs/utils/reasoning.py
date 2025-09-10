@@ -56,11 +56,11 @@ class ReasonReport:
     def get_delta_uids(reports: List["ReasonReport"], metagraph: "bt.metagraph.Metagraph" ) -> List[int]:
         """Find the delta of reports vs metagraph UIDs."""
         delta_uids = []
-        report_hotkeys = [r.miner_hotkey for r in reports]
+        report_hotkeys = [r.miner_hotkey.strip().lower() for r in reports]
         for uid in range(metagraph.n.item()):
             if uid == 0:
                 continue
-            hk = metagraph.axons[uid].hotkey
+            hk = metagraph.axons[uid].hotkey.strip().lower()
             if hk not in report_hotkeys:
                 delta_uids.append(uid)
         return delta_uids

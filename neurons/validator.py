@@ -357,6 +357,8 @@ class Validator(BaseValidatorNeuron):
             )
             if len(self.missing_evals_uids) > 0:
                 bt.logging.warning(f"\033[33mReasoning evals delta: {list(self.missing_evals_uids)}\033[0m")
+            else:
+                bt.logging.info(f"\033[32mAll miners have reasoning evals.\033[0m")
             
         except Exception as e:
             bt.logging.error(f"reasoning_sync Exception: {e}")
