@@ -427,7 +427,7 @@ def get_reasoning_report(
     if not reasoning_reports or len(reasoning_reports) == 0:
         return None
     reasoning_report = next(
-        (r for r in reasoning_reports if r.miner_hotkey.lower() == response.miner_hotkey.lower()),
+        (r for r in reasoning_reports if r.miner_hotkey.lower().strip() == response.axon.hotkey.lower().strip()),
         None
     )
     return reasoning_report
