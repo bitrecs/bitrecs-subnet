@@ -351,12 +351,12 @@ class Validator(BaseValidatorNeuron):
             bt.logging.info(f"Reasoning sync complete with \033[32m{len(self.reasoning_reports)}\033[0m reports")
             
             delta = ReasonReport.get_delta_uids(reports, self.metagraph)
-            if delta and len(delta) > 0:
-                self.missing_report_uids = set(
-                    uid for uid in self.total_uids
-                    if uid in delta
-                )
-                bt.logging.warning(f"Reports missing: {self.missing_report_uids}")
+            self.missing_evals_uids = set(
+                uid for uid in self.total_uids
+                if uid in delta
+            )
+            if len(self.missing_evals_uids) > 0:
+                bt.logging.warning(f"\033[33mReasoning evals delta: {list(self.missing_evals_uids)}\033[0m")
             
         except Exception as e:
             bt.logging.error(f"reasoning_sync Exception: {e}")

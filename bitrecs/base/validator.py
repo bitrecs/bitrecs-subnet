@@ -194,7 +194,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.tempo_batch_index = 0
         self.batches_completed = 0
 
-        self.reasoning_reports: List[ReasonReport] = []        
+        self.reasoning_reports: List[ReasonReport] = []    
+        self.missing_evals_uids = set()    
         
         write_node_info(
             network=self.network,
