@@ -234,14 +234,16 @@ def reward(
         if USE_REASONING_ADJUSTMENT:
             if not reasoning_report:
                 score = BASE_REWARD / 4
-                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report,score:{score}\033[0m")
+                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report score:{score}\033[0m")
                 return score
             elif reasoning_report.f_score <= 0:
                 score = BASE_REWARD / 2
-                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning,score:{score}\033[0m")                
-            else:                
-                score = BASE_REWARD + min(reasoning_report.f_score, max_f_score)
+                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning score:{score}\033[0m")                
+            else:
+                f_score = min(reasoning_report.f_score, max_f_score)
+                score = BASE_REWARD + f_score
                 score *= REASONING_BONUS_MULTIPLIER
+                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score} f_score: {f_score} rank: {reasoning_report.rank}\033[0m")
      
         return score
     except Exception as e:

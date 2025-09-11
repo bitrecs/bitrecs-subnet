@@ -104,10 +104,10 @@ class Validator(BaseValidatorNeuron):
         
         bt.logging.info(f"\033[35mTempo sync ran at {int(time.time())}\033[0m")
         if self.should_sync_metagraph():
-            bt.logging.info(f"Resyncing metagraph in tempo_sync - current size: {len(self.total_uids)} at block {self.block}")
+            bt.logging.info(f"Sync metagraph tempo_sync size: {len(self.total_uids)} at block {self.block}")
             self.resync_metagraph()
             self.update_total_uids()
-            bt.logging.info(f"Metagraph resynced - new size: {len(self.total_uids)}")
+            bt.logging.info(f"Metagraph resynced - final size: {len(self.total_uids)}")
 
         current_tempo = get_current_tempo(self)
         if self.last_tempo != current_tempo:
@@ -358,7 +358,7 @@ class Validator(BaseValidatorNeuron):
             if len(self.missing_evals_uids) > 0:
                 bt.logging.warning(f"\033[33mReasoning evals delta: {list(self.missing_evals_uids)}\033[0m")
             else:
-                bt.logging.info(f"\033[32mAll miners have reasoning evals.\033[0m")
+                bt.logging.info(f"\033[32mAll miners have reasoning evals\033[0m")
             
         except Exception as e:
             bt.logging.error(f"reasoning_sync Exception: {e}")
