@@ -243,7 +243,7 @@ def reward(
                 f_score = min(reasoning_report.f_score, max_f_score)
                 score = BASE_REWARD + f_score
                 score *= REASONING_BONUS_MULTIPLIER
-                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score} f_score: {f_score} rank: {reasoning_report.rank}\033[0m")
+                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")
      
         return score
     except Exception as e:
