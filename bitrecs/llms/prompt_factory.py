@@ -15,7 +15,7 @@ class PromptFactory:
     SEASON = "fall/winter"
     ENGINE_MODE = "complimentary"  #similar, sequential
     
-    SEASON_EMPHASIS = 0.1
+    SEASON_EMPHASIS = 0.0
     CORE_ATTRIBUTE_EMPHASIS = 1.0
 
     PERSONAS = {
@@ -121,7 +121,7 @@ class PromptFactory:
         season_emph = PromptFactory.SEASON_EMPHASIS
         
         core_instruction = f"Assign your core_attributes a relative importance of {_emphasis_pct(core_emph)} when recommending {self.engine_mode} products."
-        season_instruction = f"Assign seasonality a relative importance of {_emphasis_pct(season_emph)} when recommending {self.engine_mode} products."        
+        season_instruction = f"Assign seasonality a relative importance of {_emphasis_pct(season_emph)} (out of 100%) when recommending {self.engine_mode} products. If 0%, ignore seasonality."
 
         prompt = f"""# SCENARIO
     An ecommerce shopper is viewing a product detail page with SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> on your e-commerce store.
@@ -159,7 +159,8 @@ class PromptFactory:
     - Use deep product catalog knowledge
     - Understand product attributes and revenue impact
     - Avoid variant duplicates (same product in different colors/sizes)
-    - Embody your core_attributes, seasonality and guidance_on_emphasis for your task
+    - Embody your core_attributes, guidance_on_emphasis and seasonality for your task
+   
 
     # YOUR TASK
     Given a product SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> recommend **{self.num_recs}** {self.engine_mode} unique products from the context.

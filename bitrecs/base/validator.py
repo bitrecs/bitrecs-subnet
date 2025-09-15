@@ -459,7 +459,11 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not validate_br_request(synapse_with_event.input_synapse):
                             bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
-                            continue                        
+                            continue
+                        if not self.reasoning_reports or len(self.reasoning_reports) <= 0:
+                            bt.logging.error("FATAL - No scoring reports, skipped.")
+                            synapse_with_event.event.set()
+                            continue
                         
                         chosen_uids : list[int] = await self.get_next_batch()
                         if len(chosen_uids) < CONST.MIN_QUERY_BATCH_SIZE:
