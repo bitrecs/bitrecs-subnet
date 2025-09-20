@@ -61,6 +61,7 @@ class OpenRouter:
         payload = {
             "model": self.model,
             "messages": [
+                #{"role": "system", "content": "/no_think"},
                 {
                     "role": "user", 
                     "content": prompt

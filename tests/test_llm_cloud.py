@@ -690,8 +690,8 @@ def test_call_openai_route_gpt4_and_gpt5_ok():
 
 
 
-@pytest.mark.skip(reason="skipped - open_router_missing_provider")
-def test_call_grok_code_fast():
+#@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+def test_latest_openrouter_model():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
     rp = safe_random.choice(products)
@@ -717,8 +717,11 @@ def test_call_grok_code_fast():
     print(f"token count: {tc}")        
     
     
-    model = "x-ai/grok-code-fast-1"
+    #model = "x-ai/grok-code-fast-1"
     #model = "ai21/jamba-mini-1.7"    
+    #model = "qwen/qwen3-next-80b-a3b-instruct"
+    model = "x-ai/grok-4-fast:free"
+    
     provider = LLM.OPEN_ROUTER
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
@@ -821,7 +824,8 @@ def test_cycle_models_and_store_results():
         {"provider": LLM.OPEN_ROUTER, "model": "ai21/jamba-mini-1.7"},
 
         {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
-        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"}
+        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
+        {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-next-80b-a3b-instruct"},
 
     ]
     

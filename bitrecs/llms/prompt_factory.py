@@ -121,7 +121,25 @@ class PromptFactory:
         season_emph = PromptFactory.SEASON_EMPHASIS
         
         core_instruction = f"Assign your core_attributes a relative importance of {_emphasis_pct(core_emph)} when recommending {self.engine_mode} products."
-        season_instruction = f"Assign seasonality a relative importance of {_emphasis_pct(season_emph)} (out of 100%) when recommending {self.engine_mode} products. If 0%, ignore seasonality."
+        if season_emph == 0.0:
+            season_instruction = "Ignore seasonality entirely when making recommendations. Do not consider the current season, seasonal events, or any seasonal trends."
+        else:
+            season_instruction = f"Assign seasonality a relative importance of {_emphasis_pct(season_emph)} when recommending {self.engine_mode} products. Scale your consideration of seasonal factors (current season, seasonal events, and seasonal trends) proportionally to this percentage."        
+        
+        seasonal_context = ""
+        if season_emph > 0.0:
+            seasonal_context = f"""
+    <seasonality>
+    Todays date: {today}
+    Current season: <season>{season}</season>
+    Seasonal event: <event>{self.current_event}</event>    
+    </seasonality>"""
+        else:
+            seasonal_context = f"""
+    <seasonality>
+    Todays date: {today}
+    Seasonality is disabled for this recommendation task.
+    </seasonality>"""
 
         prompt = f"""# SCENARIO
     An ecommerce shopper is viewing a product detail page with SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> on your e-commerce store.
@@ -137,12 +155,7 @@ class PromptFactory:
     Your expertise: {persona_data['response_style']}
     Your priorities: {', '.join(persona_data['priorities'])}
     </core_attributes>
-
-    <seasonality>
-    Current season: <season>{season}</season>
-    Seasonal event: <event>{self.current_event}</event>
-    Todays date: {today}
-    </seasonality>
+    {seasonal_context}    
 
     <guidance_on_emphasis>
     Emphasis on persona core_attributes: {_emphasis_pct(core_emph)}    
@@ -159,7 +172,7 @@ class PromptFactory:
     - Use deep product catalog knowledge
     - Understand product attributes and revenue impact
     - Avoid variant duplicates (same product in different colors/sizes)
-    - Embody your core_attributes, guidance_on_emphasis and seasonality for your task
+    - Embody your core_attributes and guidance_on_emphasis
    
 
     # YOUR TASK
@@ -170,7 +183,7 @@ class PromptFactory:
     The product name can contain important information like which category it belongs to, sometimes denoted by | characters indicating the category hierarchy.    
     Leverage the complete information ecosystem - product catalog, user context, seasonal trends, pricing considerations and your expert role as a {self.persona} - and return {self.num_recs} {self.engine_mode} recommendations.
     Apply comprehensive analysis using all available inputs: product attributes from the context, user cart and order history, seasonality, seasonal events, pricing considerations and your personas core_attributes to return a cohesive recommendation set.
-    Apply guidance_on_emphasis with core_attributes and seasonality and if a seasonal event is specified apply extra emphasis to this specific event when making your recommendations.
+    Apply guidance_on_emphasis with core_attributes when making your final recommendations.
     Do **not** recommend products that are already in the cart.
 
     # INPUT
