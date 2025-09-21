@@ -22,20 +22,21 @@ Constants:
     ACTION_SYNC_INTERVAL (int): Interval for action syncs.
     VERSION_CHECK_INTERVAL (int): Interval for version checks.
     COOLDOWN_SYNC_INTERVAL (int): Interval for cooldown syncs.
+    REASONING_SYNC_INTERVAL (int): Interval for reasoning syncs.
     CATALOG_DUPE_THRESHOLD (float): Threshold for duplicate catalog entries.
     R2_SYNC_INTERVAL (int): Interval for R2 syncs.
     RE_PRODUCT_NAME (Pattern): Regular expression for validating product names.
     RE_REASON (Pattern): Regular expression for validating reasons.
     RE_MODEL_NAME (Pattern): Regular expression for validating model names.
     CONVERSION_SCORING_ENABLED (bool): Flag to enable conversion scoring.
+    DIFFICULTY_SCORING_ENABLED (bool): Flag to enable difficulty scoring.
+    REASONING_SCORING_ENABLED (bool): Flag to enable reasoning scoring.
     QUERY_BATCH_SIZE (int): Size of query batches.
     MIN_QUERY_BATCH_SIZE (int): Minimum size of query batches.
-    BATCH_FAILURE_THRESHOLD (float): Threshold for batch failure.
     SCORE_DISPLAY_ENABLED (bool): Flag to enable score display.
-    SCORE_DISPLAY_INTERVAL (int): Interval for score display updates.
-    REWARD_ORPHANS (bool): Flag to enable rewarding orphaned miners.
-    BATCH_ENTITY_THRESHOLD (float): Threshold for considering nodes as entities.
-    REWARD_ENTITIES (bool): Flag to enable rewarding entities.
+    SCORE_DISPLAY_INTERVAL (int): Interval for score display.
+    BATCH_ENTITY_THRESHOLD (float): Threshold for batch entity processing.
+    REWARD_ENTITIES (bool): Flag to enable rewarding entities.  
 
 """
 
@@ -54,7 +55,8 @@ MIN_CATALOG_SIZE = 6
 MAX_CATALOG_SIZE = 100_000
 ACTION_SYNC_INTERVAL = 14400
 VERSION_CHECK_INTERVAL = 1200
-COOLDOWN_SYNC_INTERVAL = 720
+COOLDOWN_SYNC_INTERVAL = 900
+REASONING_SYNC_INTERVAL = 1800
 R2_SYNC_INTERVAL = 3600
 CATALOG_DUPE_THRESHOLD = 0.05
 RE_PRODUCT_NAME = re.compile(r"[^A-Za-z0-9 |-]")

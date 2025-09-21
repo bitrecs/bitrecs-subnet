@@ -338,8 +338,12 @@ class Validator(BaseValidatorNeuron):
             bt.logging.error(f"cooldown_sync Exception: {e}")
 
 
-    @execute_periodically(timedelta(seconds=300))
+    @execute_periodically(timedelta(seconds=CONST.REASONING_SYNC_INTERVAL))
     async def reasoning_sync(self):
+        """
+        Load reasoning reports
+        
+        """
         try:
             bt.logging.info(f"\033[35mReasoning sync ran at {int(time.time())}\033[0m")
             reports = ReasonReport.get_reports()

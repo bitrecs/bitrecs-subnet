@@ -13,7 +13,6 @@ from bitrecs.utils.constants import SCHEMA_UPDATE_CUTOFF
 
 EVENTS_LEVEL_NUM = 38
 DEFAULT_LOG_BACKUP_COUNT = 10
-#SCHEMA_UPDATE_CUTOFF = datetime(2025, 7, 21, tzinfo=timezone.utc)
 TIMESTAMP_FILE = 'timestamp.txt'
 NODE_INFO_FILE = 'node_info.json'
 
@@ -108,39 +107,14 @@ def read_timestamp():
         return None
 
 
-# def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
-#     try:        
-#         frames = []
-#         for response in responses:
-#             headers = response.to_headers()
-#             df = pd.json_normalize(headers)          
-#             frames.append(df)
-#         final = pd.concat(frames)
-#         cwd = os.getcwd()
-#         p = os.path.join(cwd, 'miner_responses')
-#         if not os.path.exists(p):
-#             os.makedirs(p)        
-#         if len(final) > 0:
-#             utc_now = datetime.now(timezone.utc)
-#             created_at = utc_now.strftime("%Y-%m-%d_%H-%M-%S")
-#             full_path = os.path.join(p, f'miner_responses_step_{step}_{created_at}.csv')
-#             final.to_csv(full_path, index=False)
-#         bt.logging.info(f"Miner responses logged {len(final)}")
-#     except Exception as e:
-#         bt.logging.error(f"Error in logging miner responses: {e}")
-#         pass
-
-
 def update_table_schema(conn: sqlite3.Connection, required_columns: list) -> None:
     """Update table schema to include any missing columns before cutoff date."""
     if datetime.now(timezone.utc) > SCHEMA_UPDATE_CUTOFF:
-        return
-        
+        return        
     cursor = conn.cursor()
     # Get existing columns
     cursor.execute("PRAGMA table_info(miner_responses)")
-    existing_columns = {row[1] for row in cursor.fetchall()}
-    
+    existing_columns = {row[1] for row in cursor.fetchall()}    
     # Add any missing columns
     for col in required_columns:
         if col not in existing_columns:
@@ -189,18 +163,15 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewar
 
                 dtype_dict = {col: 'TEXT' for col in final.columns}
                 cursor = conn.cursor()
-                
-                # Check if table exists
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='miner_responses';")
-                table_exists = cursor.fetchone() is not None
-                
+                table_exists = cursor.fetchone() is not None                
                 if not table_exists:
                     final.to_sql('miner_responses', conn, index=False, dtype=dtype_dict)
-                else:
-                    # Update schema if needed
+                else:                    
                     update_table_schema(conn, list(final.columns))
                     final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
                 conn.commit()
+                bt.logging.trace(f"DB Updated at step {step}")
             except sqlite3.Error as e:
                 bt.logging.error(f"SQLite error: {e}")
                 conn.rollback()
