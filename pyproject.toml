@@ -15,7 +15,7 @@ license = {text = "MIT"}
 
 dependencies = [
     "bittensor==9.10.1",
-    "bittensor-cli==9.11.0",
+    "bittensor-cli==9.11.2",
     "substrate-interface==1.7.11",
     "async-substrate-interface==1.5.2",
     "cryptography==45.0.5",
@@ -23,7 +23,7 @@ dependencies = [
     "pydantic==2.11.7",
     "numpy==2.0.2",
     "python-dotenv==1.1.1",
-    "openai==1.106.1",
+    "openai==1.108.1",
     "pandas==2.2.3",
     "json-repair==0.50.1",
     "jsonschema==4.25.1",

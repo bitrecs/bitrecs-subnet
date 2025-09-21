@@ -67,8 +67,9 @@ class OpenRouter:
                     "content": prompt
                 }],
             "reasoning": {
+                "enabled": False,
                 "exclude": True,
-                "effort": "low"
+                "effort": "minimal"
             },
             "stream": False,
             "temperature": self.temp

@@ -34,8 +34,8 @@ from bitrecs.utils.reasoning import ReasonReport
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-USE_REASONING_ADJUSTMENT = True
-USE_DIFFICULTY_ADJUSTMENT = False
+#USE_REASONING_ADJUSTMENT = True
+#USE_DIFFICULTY_ADJUSTMENT = False
 SUSPECT_MINER_DECAY = 0.980
 
 
@@ -231,7 +231,7 @@ def reward(
         
         score = BASE_REWARD
 
-        if USE_REASONING_ADJUSTMENT:
+        if CONST.REASONING_SCORING_ENABLED:
             if not reasoning_report:
                 score = BASE_REWARD / 4
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report score:{score}\033[0m")
@@ -343,10 +343,10 @@ def get_rewards(
 
     difficulty_statement = get_difficulty_statement(difficulty_decay)
     bt.logging.trace(f"{difficulty_statement}")
-    if not USE_DIFFICULTY_ADJUSTMENT:
+    if not CONST.DIFFICULTY_SCORING_ENABLED:
         bt.logging.trace(f"\033[33mDifficulty adjustment skipped!\033[0m")
     
-    if USE_REASONING_ADJUSTMENT:
+    if CONST.REASONING_SCORING_ENABLED:
         bt.logging.trace(f"\033[32mReasoning scoring is enabled\033[0m")
 
     rewards = []
@@ -361,7 +361,7 @@ def get_rewards(
         if base_reward <= 0.0:
             rewards.append(0.0)
             continue
-        if USE_DIFFICULTY_ADJUSTMENT:
+        if CONST.DIFFICULTY_SCORING_ENABLED:
             final_score = base_reward * difficulty_decay
         else:
             final_score = base_reward

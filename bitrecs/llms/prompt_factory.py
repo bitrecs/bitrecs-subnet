@@ -155,6 +155,7 @@ class PromptFactory:
     Your expertise: {persona_data['response_style']}
     Your priorities: {', '.join(persona_data['priorities'])}
     </core_attributes>
+
     {seasonal_context}    
 
     <guidance_on_emphasis>
@@ -172,8 +173,7 @@ class PromptFactory:
     - Use deep product catalog knowledge
     - Understand product attributes and revenue impact
     - Avoid variant duplicates (same product in different colors/sizes)
-    - Embody your core_attributes and guidance_on_emphasis
-   
+    - Embody your core_attributes and guidance_on_emphasis   
 
     # YOUR TASK
     Given a product SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> recommend **{self.num_recs}** {self.engine_mode} unique products from the context.

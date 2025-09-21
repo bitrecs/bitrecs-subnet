@@ -58,7 +58,7 @@ from bitrecs.utils.uids import get_all_miner_uids
 from bitrecs.validator.reward import (
     CONSENSUS_BONUS_MULTIPLIER, 
     SUSPECT_MINER_DECAY, 
-    get_rewards
+    get_rewards    
 )
 from bitrecs.validator.rules import validate_br_request
 from bitrecs.utils.logging import (    
@@ -366,19 +366,16 @@ class BaseValidatorNeuron(BaseNeuron):
         try:
             ports_to_clean = set()
             if not axons:
-                return
-            
+                return            
             for axon in axons:
                 try:
                     port = int(axon.port)
                     ports_to_clean.add(port)
                 except (ValueError, AttributeError):
-                    continue
-            
+                    continue            
             if not ports_to_clean:
                 bt.logging.warning("No valid miner ports found for cleanup")
-                return
-                
+                return                
             bt.logging.trace(f"Cleaning up connections to ports: {sorted(ports_to_clean)}")
             for port in ports_to_clean:
                 subprocess.run(['ss', '-K', 'state', 'close-wait', 'dport', '=', f':{port}'], 
@@ -417,7 +414,6 @@ class BaseValidatorNeuron(BaseNeuron):
         grouped = defaultdict(list)
         for r in responses:
             grouped[r.dendrite.hotkey].append(r)
-
         for hotkey, group in grouped.items():
             bt.logging.warning(f"\n=== dendrite.hotkey: {hotkey} ({len(group)} responses) ===")
             for response in group:
@@ -442,7 +438,6 @@ class BaseValidatorNeuron(BaseNeuron):
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
                     bt.logging.trace(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
-
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
                         synapse_with_event = API_QUEUE.get()
@@ -460,7 +455,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
                             continue
-                        if not self.reasoning_reports or len(self.reasoning_reports) <= 0:
+                        if CONST.REASONING_SCORING_ENABLED and (not self.reasoning_reports or len(self.reasoning_reports) <= 0):                          
                             bt.logging.error("FATAL - No scoring reports, skipped.")
                             synapse_with_event.event.set()
                             continue
@@ -527,26 +522,6 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
                             continue
-                        
-                        # failure_rate = np.sum(rewards == 0) / len(rewards)
-                        # if failure_rate >= CONST.BATCH_FAILURE_THRESHOLD:
-                        #     self.bad_set_count += 1
-                        #     bt.logging.error(f"ERROR - Failure threshold ({failure_rate:.2%} > {CONST.BATCH_FAILURE_THRESHOLD:.2%})")
-                        #     bt.logging.error(f"Total bad sets: \033[31m{self.bad_set_count}\033[0m")
-                        #     orphans = [(uid, reward) for uid, reward in zip(chosen_uids, rewards) if reward > 0]
-                        #     if orphans:
-                        #         bt.logging.warning("\033[33mOrphaned miners!\033[0m")
-                        #         for uid, reward in orphans:
-                        #             self.batch_orphan_uids.add(uid)
-                        #             bt.logging.warning(f"Orphan UID {uid}: potential reward={reward:.4f}")
-                        #         if CONST.REWARD_ORPHANS:
-                        #             self.update_successful_scores(rewards, chosen_uids)
-                        #             bt.logging.trace(f"\033[32mOrphans rewarded\033[0m")
-                        #     self.decay_suspects()
-                        #     loop = asyncio.get_event_loop()
-                        #     loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)
-                        #     synapse_with_event.event.set()
-                        #     continue
                         
                         selected_rec = None
                         good_indices = np.where(rewards > 0)[0]
