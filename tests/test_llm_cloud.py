@@ -714,13 +714,13 @@ def test_latest_openrouter_model():
     wc = PromptFactory.get_word_count(prompt)
     print(f"word count: {wc}")
     tc = PromptFactory.get_token_count(prompt)
-    print(f"token count: {tc}")        
-    
+    print(f"token count: {tc}")
     
     #model = "x-ai/grok-code-fast-1"
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
-    model = "x-ai/grok-4-fast:free"
+    #model = "x-ai/grok-4-fast:free"
+    model = "openai/gpt-5-nano"
     
     provider = LLM.OPEN_ROUTER
     
@@ -744,9 +744,6 @@ def test_latest_openrouter_model():
         print(f"{sku}: {count}")
         assert count == 1
     assert user_prompt not in skus
-
-    
-
 
 
 def query_llm_with_timeout(server, model, system_prompt, temp, user_prompt, timeout=30):   
@@ -789,7 +786,6 @@ def test_cycle_models_and_store_results():
         """
     )
     conn.commit()
-
     
     #raw_products = product_1k()
     raw_products = product_shopify()
@@ -823,9 +819,10 @@ def test_cycle_models_and_store_results():
         {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-30b-a3b-instruct-2507"},
         {"provider": LLM.OPEN_ROUTER, "model": "ai21/jamba-mini-1.7"},
 
-        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
-        {"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
+        #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
+        #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
         {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-next-80b-a3b-instruct"},
+        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4-fast:free"}        
 
     ]
     
@@ -889,3 +886,29 @@ def test_cycle_models_and_store_results():
     conn.close()
     
     assert success_count == len(providers), f"Not all provider/model combinations succeeded: {success_count} out of {len(providers)}"
+
+
+
+def test_print_summary_table():
+    db_path = "./tests/llm_results.db"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT provider, model, COUNT(*) as attempts, SUM(success) as successes, AVG(duration) as avg_duration
+        FROM llm_results
+        GROUP BY provider, model
+        ORDER BY successes DESC, avg_duration ASC
+        """
+    )
+    rows = cur.fetchall()
+    print("\nLLM Providers Summary:")
+    print(f"{'Provider':<15} {'Model':<50} {'Attempts':>10} {'Successes':>10} {'Avg Duration (s)':>20}")
+    print("-" * 105)    
+    for row in rows:
+        provider, model, attempts, successes, avg_duration = row
+        # Truncate model name if longer than 49 chars to fit column
+        model_display = model[:49] if len(model) > 49 else model
+        print(f"{provider:<15} {model_display:<50} {attempts:>10} {successes:>10} {avg_duration:>20.2f}")    
+    conn.close()
+    assert 1==1

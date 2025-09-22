@@ -58,6 +58,18 @@ class OpenRouter:
             "HTTP-Referer": "https://bitrecs.ai",
             "X-Title": "bitrecs"
         }
+        reasoning = {
+            "enabled": False,
+            "exclude": True,
+            "effort": "minimal"
+        }
+        # Handle specific models that require different reasoning settings
+        if "gpt-5" in self.model.lower():
+            reasoning = {
+                "exclude": True,
+                "effort": "minimal"
+            }
+
         payload = {
             "model": self.model,
             "messages": [
@@ -66,11 +78,7 @@ class OpenRouter:
                     "role": "user", 
                     "content": prompt
                 }],
-            "reasoning": {
-                "enabled": False,
-                "exclude": True,
-                "effort": "minimal"
-            },
+            "reasoning": reasoning,
             "stream": False,
             "temperature": self.temp
         }
@@ -85,6 +93,7 @@ class OpenRouter:
             )
             response.raise_for_status()
             data = response.json()
+            #print(data)
             return data['choices'][0]['message']['content']
         except requests.exceptions.ConnectTimeout:
             raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
