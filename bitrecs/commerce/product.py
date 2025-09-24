@@ -3,7 +3,6 @@ import re
 import json
 import bittensor as bt
 import pandas as pd
-import operator
 import bitrecs.utils.constants as CONST
 from abc import abstractmethod
 from enum import Enum
