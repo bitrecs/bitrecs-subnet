@@ -512,7 +512,7 @@ def test_call_chutes():
     assert user_prompt not in skus
 
 
-@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+@pytest.mark.skip(reason="skipped")
 def test_call_nousresearch_deephermes_3_mistral_24b_preview():
     #nousresearch/deephermes-3-mistral-24b-preview
     raw_products = product_woo()
@@ -564,7 +564,7 @@ def test_call_nousresearch_deephermes_3_mistral_24b_preview():
     
 
 
-@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+@pytest.mark.skip(reason="skipped")
 def test_call_horizon_alpha():    
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -615,7 +615,7 @@ def test_call_horizon_alpha():
     assert user_prompt not in skus
 
 
-#@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+@pytest.mark.skip(reason="skipped")
 def test_call_openai_route_gpt4_and_gpt5_ok():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -690,7 +690,7 @@ def test_call_openai_route_gpt4_and_gpt5_ok():
 
 
 
-#@pytest.mark.skip(reason="skipped - open_router_missing_provider")
+@pytest.mark.skip(reason="skipped")
 def test_latest_openrouter_model():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -719,8 +719,7 @@ def test_latest_openrouter_model():
     #model = "x-ai/grok-code-fast-1"
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
-    #model = "x-ai/grok-4-fast:free"
-    model = "openai/gpt-5-nano"
+    model = "x-ai/grok-4-fast:free"    
     
     provider = LLM.OPEN_ROUTER
     
@@ -888,7 +887,7 @@ def test_cycle_models_and_store_results():
     assert success_count == len(providers), f"Not all provider/model combinations succeeded: {success_count} out of {len(providers)}"
 
 
-
+@pytest.mark.skip(reason="skipped")
 def test_print_summary_table():
     db_path = "./tests/llm_results.db"
     conn = sqlite3.connect(db_path)

@@ -597,7 +597,7 @@ def test_sample_user_profile():
     
 #@pytest.skip("Skipping test_sample_profile_get_similar_orders, requires database setup")
 def test_sample_profile_get_similar_orders():
-    num_recs = 5
+    num_recs = 8
     profile = get_sample_user_profile()    
     #$products = products_music()[:5000]
     products = products_music()
@@ -636,7 +636,7 @@ def test_sample_profile_get_similar_orders():
     #model = "qwen3:32b"
     #model = "llama3.3:70b"
     #model = "google/gemini-2.5-flash-lite-preview-06-17"
-    model = "google/gemini-2.0-flash-lite-001"
+    #model = "google/gemini-2.0-flash-lite-001"
     #model = "google/gemini-2.0-flash-001"
     #model = "amazon/nova-lite-v1"
     #model = "openai/gpt-4.1-nano"
@@ -650,6 +650,7 @@ def test_sample_profile_get_similar_orders():
     #model = "google/gemini-2.5-flash-lite"
     #model = "google/gemini-2.5-flash"        
     #model = "qwen3:30b-a3b-instruct-2507-q4_K_M"
+    model = "x-ai/grok-4-fast:free"
 
     #server = LLM.OLLAMA_LOCAL
     server = LLM.OPEN_ROUTER
