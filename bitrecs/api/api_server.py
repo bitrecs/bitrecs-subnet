@@ -484,7 +484,7 @@ class ApiServer:
                 "catalog_size": str(catalog_size),
                 "miner_uid": response.miner_uid,
                 "miner_hotkey": response.miner_hotkey,
-                "reasoning": f"Bitrecs AI - {self.network}"
+                "reasoning": f"Bitrecs AI - {self.network} - {self.validator.uid}"
             }
             et_a = int(time.time())
             total_duration = et_a - st_a

@@ -34,8 +34,6 @@ from bitrecs.utils.reasoning import ReasonReport
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-#USE_REASONING_ADJUSTMENT = True
-#USE_DIFFICULTY_ADJUSTMENT = False
 SUSPECT_MINER_DECAY = 0.980
 
 
@@ -357,14 +355,14 @@ def get_rewards(
         
         r_report = get_reasoning_report(response, reasoning_reports)
         max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
-        base_reward = reward(validator_hotkey, ground_truth, catalog_validator, response, r_report, actions, r_limit, max_f_score)
-        if base_reward <= 0.0:
+        miner_reward = reward(validator_hotkey, ground_truth, catalog_validator, response, r_report, actions, r_limit, max_f_score)
+        if miner_reward <= 0.0:
             rewards.append(0.0)
             continue
         if CONST.DIFFICULTY_SCORING_ENABLED:
-            final_score = base_reward * difficulty_decay
+            final_score = miner_reward * difficulty_decay
         else:
-            final_score = base_reward
+            final_score = miner_reward
         rewards.append(final_score)
 
     return np.array(rewards, dtype=float)
