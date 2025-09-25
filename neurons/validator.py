@@ -345,6 +345,8 @@ class Validator(BaseValidatorNeuron):
         
         """
         try:
+            if not CONST.REASONING_SCORING_ENABLED:
+                return
             bt.logging.info(f"\033[35mReasoning sync ran at {int(time.time())}\033[0m")
             reports = ReasonReport.get_reports()
             if not reports or len(reports) == 0:

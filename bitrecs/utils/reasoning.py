@@ -49,7 +49,7 @@ class ReasonReport:
             sorted_reports = sorted(reports, key=lambda x: x.rank, reverse=False)
             return sorted_reports
         except Exception as e:
-            bt.logging.error(f"load_user_actions Exception: {e}")
+            bt.logging.error(f"get_reports Exception: {e}")
         
 
     @staticmethod
