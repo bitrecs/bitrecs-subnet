@@ -595,10 +595,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         synapse_with_event.output_synapse = elected
                         synapse_with_event.event.set()
-                        self.total_request_in_interval +=1
-                    
-                        bt.logging.info(f"Scored responses: {rewards}")
+                        self.total_request_in_interval +=1                    
+                        
                         self.update_scores(rewards, chosen_uids)
+                        bt.logging.info(f"Scored responses: {rewards}")
                         loop = asyncio.get_event_loop()
                         loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
                         #bt.logging.trace(f"SQL logging submitted to thread pool - step {self.step}")
@@ -754,6 +754,7 @@ class BaseValidatorNeuron(BaseNeuron):
             #return
 
         if CONST.EMISSION_CONTROL_ENABLED:
+            bt.logging.trace(f"\033[33mApplying emission control to scores - burning: {CONST.EMISSION_CONTROL_RATE}\033[0m")
             self.emission_control_scores(CONST.EMISSION_CONTROL_TARGET_UID)
         
         # Calculate L1 norm of scores
