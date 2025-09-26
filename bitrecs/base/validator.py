@@ -701,6 +701,37 @@ class BaseValidatorNeuron(BaseNeuron):
             self.is_running = False
             bt.logging.debug("Stopped")
 
+    
+    def emission_control_scores(self, target_uid):
+        scores = self.scores
+        total_score = np.sum(scores)
+
+        if not isinstance(target_uid, int) or target_uid < 0 or target_uid >= len(scores):
+            bt.logging.info(f"target_uid {target_uid} is out of bounds for scores array")
+            return        
+        
+        new_target_score = CONST.EMISSION_CONTROL_RATE * total_score
+
+        # Remaining total weight for other UIDs
+        remaining_weight = (1 - CONST.EMISSION_CONTROL_RATE) * total_score
+
+        # Current total of non-target scores
+        total_other_scores = total_score - scores[target_uid]
+
+        if total_other_scores == 0:
+            bt.logging.warning("All scores are zero except target UID, cannot scale.")
+            return
+
+        # Scale other scores proportionally
+        new_scores = np.zeros_like(scores, dtype=float)
+        for uid in range(len(scores)):
+            if uid == target_uid:
+                new_scores[uid] = new_target_score
+            else:
+                new_scores[uid] = (scores[uid] / total_other_scores) * remaining_weight
+
+        self.scores = new_scores
+
 
     def set_weights(self):
         """Sets the validator weights to the metagraph hotkeys based on the scores."""
@@ -721,6 +752,9 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.warning(f"\033[3;3mUpdating premature weights! \033[0m")
             bt.logging.warning(f"\033[3;3mCoverage {coverage:.2f}% is below minimum threshold of {min_coverage:.2f}%.\033[0m")
             #return
+
+        if CONST.EMISSION_CONTROL_ENABLED:
+            self.emission_control_scores(CONST.EMISSION_CONTROL_TARGET_UID)
         
         # Calculate L1 norm of scores
         norm = np.linalg.norm(self.scores, ord=1, axis=0, keepdims=True)

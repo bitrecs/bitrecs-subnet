@@ -37,6 +37,9 @@ Constants:
     SCORE_DISPLAY_INTERVAL (int): Interval for score display.
     BATCH_ENTITY_THRESHOLD (float): Threshold for batch entity processing.
     REWARD_ENTITIES (bool): Flag to enable rewarding entities.  
+    EMISSION_CONTROL_ENABLED (bool): Flag to enable emission control.  
+    EMISSION_CONTROL_RATE (float): Rate for emission control adjustments.
+    EMISSION_CONTROL_TARGET_UID (int): Target UID for emission control.
 
 """
 
@@ -71,3 +74,6 @@ SCORE_DISPLAY_ENABLED = True
 SCORE_DISPLAY_INTERVAL = 600
 BATCH_ENTITY_THRESHOLD = 0.20
 REWARD_ENTITIES = True
+EMISSION_CONTROL_ENABLED = True
+EMISSION_CONTROL_RATE = 0.95
+EMISSION_CONTROL_TARGET_UID = 0
