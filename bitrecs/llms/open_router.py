@@ -2,12 +2,16 @@ import json
 import requests
 from openai import OpenAI
 
+from bitrecs.protocol import MinerResponse, SignedResponse
+
 class OpenRouter:    
     def __init__(self, 
                  key,
                  model="google/gemini-flash-1.5-8b", 
                  system_prompt="You are a helpful assistant.", 
-                 temp=0.0
+                 temp=0.0,
+                 use_verified_inference: bool = False,
+                 miner_hotkey: str = None,
         ):
 
         self.OPENROUTER_API_KEY = key
@@ -16,38 +20,11 @@ class OpenRouter:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
+        self.use_verified_inference = use_verified_inference
+        self.miner_hotkey = miner_hotkey
 
 
-    def call_open_router_legacy(self, prompt) -> str:
-        if not prompt or len(prompt) < 10:
-            raise ValueError()
-
-        client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=self.OPENROUTER_API_KEY,
-        )
-
-        completion = client.chat.completions.create(
-            extra_headers={
-                "HTTP-Referer": "https://bitrecs.ai",
-                "X-Title": "bitrecs"
-            },
-            model=self.model,
-            messages=[
-            {
-                "role": "user",
-                "content": prompt,
-            }],
-            temperature=self.temp,
-            max_tokens=2048,
-            reasoning_effort="low"            
-        )
-
-        thing = completion.choices[0].message.content                
-        return thing    
-
-
-    def call_open_router(self, prompt) -> str:
+    def call_open_router(self, prompt) -> MinerResponse:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 
@@ -58,6 +35,12 @@ class OpenRouter:
             "HTTP-Referer": "https://bitrecs.ai",
             "X-Title": "bitrecs"
         }
+
+        if self.use_verified_inference:
+            url = "https://verified.bitrecs.ai/v1/chat/completions"
+            headers["x-hotkey"] = self.miner_hotkey
+            headers["x-provider"] = "OPEN_ROUTER"
+      
         reasoning = {
             "enabled": False,
             "exclude": True,
@@ -92,9 +75,31 @@ class OpenRouter:
                 timeout=timeout
             )
             response.raise_for_status()
-            data = response.json()
-            #print(data)
-            return data['choices'][0]['message']['content']
+            data = response.json()     
+            
+            if self.use_verified_inference:
+                response = data["response"]
+                proof = data["proof"]
+                signature = data["signature"]
+                timestamp = data["timestamp"]
+                ttl = data["ttl"]
+                miner_response = MinerResponse(
+                    results=response['choices'][0]['message']['content'],
+                    signed_response=SignedResponse(
+                        response=response,
+                        proof=proof,
+                        signature=signature,
+                        timestamp=timestamp,
+                        ttl=ttl
+                    )                    
+                )
+                return miner_response
+            else:
+                miner_response = MinerResponse(
+                    results=data['choices'][0]['message']['content'],
+                    signed_response=None
+                )
+                return miner_response            
         except requests.exceptions.ConnectTimeout:
             raise TimeoutError(f"OpenRouter connect timed out after {timeout[0]}s")
         except requests.exceptions.ReadTimeout:

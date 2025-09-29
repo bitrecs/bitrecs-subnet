@@ -171,6 +171,12 @@ def add_miner_args(cls, parser):
         help="Which LLM model to use",
     )
 
+    parser.add_argument(
+        "--verified.inference",
+        action="store_true",
+        help="If set miners will use verified inference",
+        default=False,
+    )
 
 
 def add_validator_args(cls, parser):

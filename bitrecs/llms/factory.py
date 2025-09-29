@@ -1,13 +1,13 @@
 import os
 import bittensor as bt
 from enum import Enum
-
 from bitrecs.llms.gemini import Gemini
 from bitrecs.llms.llama_local import OllamaLocal
 from bitrecs.llms.open_router import OpenRouter
 from bitrecs.llms.chat_gpt import ChatGPT
 from bitrecs.llms.vllm_router import vLLM
 from bitrecs.llms.chutes import Chutes
+from bitrecs.protocol import MinerResponse
 
 
 class LLM(Enum):
@@ -21,19 +21,20 @@ class LLM(Enum):
     CHUTES = 8
 
 
+
 class LLMFactory:
 
     @staticmethod
     def query_llm(server: LLM, model: str, 
                   system_prompt="You are a helpful assistant", 
-                  temp=0.0, user_prompt="") -> str:
+                  temp=0.0, user_prompt="", miner_hotkey=None, use_verified_inference=False) -> MinerResponse:
         match server:
             case LLM.OLLAMA_LOCAL:
                 return OllamaLocalInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.OPEN_ROUTER:
-                return OpenRouterInterface(model, system_prompt, temp).query(user_prompt)
+                return OpenRouterInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query(user_prompt)
             case LLM.CHAT_GPT:
-                return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
+                return ChatGPTInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query(user_prompt)
             case LLM.VLLM:
                 return VllmInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.GEMINI:
@@ -46,6 +47,8 @@ class LLMFactory:
                 raise NotImplementedError("Claude is not implemented yet")
             case _:
                 raise ValueError("Unknown LLM server")
+            
+   
             
     @staticmethod
     def try_parse_llm(value: str) -> LLM:
@@ -79,40 +82,46 @@ class OllamaLocalInterface:
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
-    def query(self, user_prompt) -> str:
+    def query(self, user_prompt) -> MinerResponse:
         llm = OllamaLocal(ollama_url=self.OLLAMA_LOCAL_URL, model=self.model, 
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
     
     
 class OpenRouterInterface:
-    def __init__(self, model, system_prompt, temp):
+    def __init__(self, model, system_prompt, temp, hotkey, use_verified_inference):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
         self.OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+        self.miner_hotkey = hotkey
+        self.use_verified_inference = use_verified_inference
         if not self.OPENROUTER_API_KEY:
             raise ValueError("OPENROUTER_API_KEY is not set")
     
-    def query(self, user_prompt) -> str:
+    def query(self, user_prompt) -> MinerResponse:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
-                            system_prompt=self.system_prompt, temp=self.temp)
-        return router.call_open_router(user_prompt)
-        
+                            system_prompt=self.system_prompt, temp=self.temp, miner_hotkey=self.miner_hotkey, 
+                            use_verified_inference=self.use_verified_inference)
+        return router.call_open_router(user_prompt)    
+   
     
     
 class ChatGPTInterface:
-    def __init__(self, model, system_prompt, temp):
+    def __init__(self, model, system_prompt, temp, hotkey, use_verified_inference):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
         self.CHATGPT_API_KEY = os.environ.get("CHATGPT_API_KEY")
         if not self.CHATGPT_API_KEY:            
             raise ValueError("CHATGPT_API_KEY is not set")
+        self.miner_hotkey = hotkey
+        self.use_verified_inference = use_verified_inference
         
-    def query(self, user_prompt) -> str:
+    def query(self, user_prompt) -> MinerResponse:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
-                         system_prompt=self.system_prompt, temp=self.temp)
+                         system_prompt=self.system_prompt, temp=self.temp, miner_hotkey=self.miner_hotkey, 
+                         use_verified_inference=self.use_verified_inference)
         return router.call_chat_gpt(user_prompt)
     
     

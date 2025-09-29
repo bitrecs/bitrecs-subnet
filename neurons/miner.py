@@ -159,6 +159,8 @@ class Miner(BaseMinerNeuron):
         
         if(self.config.logging.trace):
             bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")
+
+        self.use_verified_inference : bool = self.config.verified.inference
     
 
     async def forward(
@@ -247,7 +249,8 @@ class Miner(BaseMinerNeuron):
             models_used=[self.model],
             miner_uid=str(self.uid),
             miner_hotkey=self.wallet.hotkey.ss58_address,
-            miner_signature=""
+            miner_signature="", 
+            verified_proof={}
         )
         payload_hash = self.sign_response(output_synapse)
         signature = self.wallet.hotkey.sign(payload_hash)
