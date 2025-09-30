@@ -1,12 +1,11 @@
 import os
+import httpx
 os.environ["NEST_ASYNCIO"] = "0"
+import base64
 import json
 import time
 import pytest    
-import sqlite3
-import concurrent.futures
-from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from bitrecs.protocol import SignedResponse
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
@@ -14,51 +13,11 @@ from typing import Counter
 from bitrecs.commerce.product import CatalogProvider, ProductFactory
 from bitrecs.llms.factory import LLM, LLMFactory
 from bitrecs.llms.prompt_factory import PromptFactory
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from dotenv import load_dotenv
 load_dotenv()
 
-
-
-LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
-OLLAMA_MODEL = "mistral-nemo"
-
-map = [
-    {"provider": LLM.OLLAMA_LOCAL, "model": "mistral-nemo"},
-    {"provider": LLM.VLLM, "model": "NousResearch/Meta-Llama-3-8B-Instruct"},
-    {"provider": LLM.CHAT_GPT, "model": "gpt-5-nano-2025-08-07"},
-
-    #{"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},
-    #{"provider": LLM.OPEN_ROUTER, "model": "nousresearch/deephermes-3-llama-3-8b-preview:free"},
-
-    {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-lite"},
-    {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-scout"},
-    {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-4.1-nano"},
-    
-    {"provider": LLM.GROK, "model": "grok-2-latest"},
-    {"provider": LLM.GEMINI, "model": "gemini-2.0-flash-001"},
-    {"provider": LLM.CLAUDE, "model": "anthropic/claude-3.5-haiku"}
-]
-
-# CLOUD_BATTERY = ["amazon/nova-lite-v1", "google/gemini-flash-1.5-8b", "google/gemini-2.0-flash-001",
-#                  "x-ai/grok-2-1212", "qwen/qwen-turbo", "openai/gpt-4o-mini"]
-
-#CLOUD_PROVIDERS = [LLM.OPEN_ROUTER, LLM.GEMINI, LLM.CHAT_GPT, LLM.GROK, LLM.CLAUDE]
-CLOUD_PROVIDERS = [LLM.OPEN_ROUTER, LLM.GEMINI, LLM.CHAT_GPT]
-
-
-#LOCAL_PROVIDERS = [LLM.OLLAMA_LOCAL, LLM.VLLM]
-LOCAL_PROVIDERS = [LLM.OLLAMA_LOCAL]
-
-
-MASTER_SKU = "B08XYRDKDV" 
-#HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
-
-# 1 failed, 8 passed, 1 skipped, 4 warnings in 147.16s (0:02:27
-# 7 passed, 1 skipped, 4 warnings in 35.79s
-#7 passed, 4 warnings in 42.26s
-#7 passed, 4 warnings in 60.06s (0:01:00)
-#2 failed, 6 passed, 4 warnings in 200.12s (0:03:20)
+VERIFIED_URL = "https://verified.bitrecs.ai"
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
@@ -90,28 +49,8 @@ def product_20k():
     products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     return products
 
-def get_local_answer(provider: LLM, prompt: str, model: str, num_recs: int) -> list:
-    local_providers = [LLM.OLLAMA_LOCAL, LLM.VLLM]
-    if provider not in local_providers:
-        raise ValueError("Invalid provider for local call")
-    llm_response = LLMFactory.query_llm(server=provider,
-                                 model=model, 
-                                 system_prompt="You are a helpful assistant", 
-                                 temp=0.0, user_prompt=prompt)
-    parsed_recs = PromptFactory.tryparse_llm(llm_response)
-    return parsed_recs
-
-
-def test_print_setup():
-    print(f"\nMASTER_SKU: {MASTER_SKU}")
-    print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
-        
-    print(f"\nLOCAL: {LOCAL_PROVIDERS}")
-    print(f"CLOUD: {CLOUD_PROVIDERS}")
-
-
-
-def test_latest_openrouter_model():
+@pytest.mark.asyncio
+async def test_openrouter_verified_inf():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
     rp = safe_random.choice(products)
@@ -134,24 +73,22 @@ def test_latest_openrouter_model():
     wc = PromptFactory.get_word_count(prompt)
     print(f"word count: {wc}")
     tc = PromptFactory.get_token_count(prompt)
-    print(f"token count: {tc}")
+    print(f"token count: {tc}")    
     
-    #model = "x-ai/grok-code-fast-1"
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
-    # model = "x-ai/grok-4-fast:free"
-    # provider = LLM.OPEN_ROUTER
+    model = "x-ai/grok-4-fast:free"
+    provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
-    model = "gpt-5-nano"
-    provider = LLM.CHAT_GPT
-
+    #model = "gpt-5-nano"
+    #provider = LLM.CHAT_GPT
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
 
     hotkey = "ASLJALSJASLKFJALSKJDFK"
-    llm_response = LLMFactory.query_llm(server=provider,
+    llm_response = LLMFactory.query_llmv(server=provider,
                                  model=model,
                                  system_prompt="You are a helpful assistant", 
                                  temp=0.0, 
@@ -161,6 +98,12 @@ def test_latest_openrouter_model():
     et = time.time()
     diff = et - st  
     print(f"LLM response time: {diff:.2f} seconds")
+
+    public_key = await get_public_key()
+    response = llm_response.signed_response
+    assert verify_signature(response, public_key), "Signature verification failed"
+    print(f"\033[32mSignature verification succeeded \033[0m")
+
     parsed_recs = PromptFactory.tryparse_llm(llm_response.results)
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
@@ -171,3 +114,34 @@ def test_latest_openrouter_model():
         print(f"{sku}: {count}")
         assert count == 1
     assert user_prompt not in skus
+
+
+async def get_public_key() -> Ed25519PublicKey:
+    """Get public key from proxy server."""    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        public_key_response = await client.get(f"{VERIFIED_URL}/public_key")
+        public_key_response.raise_for_status()
+        public_key_string = json.loads(public_key_response.text)["public_key"]
+        raw_bytes = bytes.fromhex(public_key_string)
+        return Ed25519PublicKey.from_public_bytes(raw_bytes)    
+
+
+def verify_signature(
+    response:  SignedResponse, 
+    public_key: Ed25519PublicKey
+) -> bool:
+    """Verify the signature of the response."""
+    proof = response.proof
+    signature_b64 = response.signature
+
+    print(f"Proof: {proof}")
+    print(f"Signature (base64): {signature_b64}")
+
+    signature_bytes = base64.b64decode(signature_b64)
+    serialized_proof = json.dumps(proof, sort_keys=True).encode()
+    try:
+        public_key.verify(signature_bytes, serialized_proof)
+        return True
+    except Exception as e:
+        print(f"Verification failed: {e}")
+        return False

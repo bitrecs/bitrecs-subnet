@@ -27,16 +27,40 @@ class LLMFactory:
     @staticmethod
     def query_llm(server: LLM, model: str, 
                   system_prompt="You are a helpful assistant", 
-                  temp=0.0, user_prompt="", miner_hotkey=None, use_verified_inference=False) -> MinerResponse:
+                  temp=0.0, user_prompt="") -> str:
         match server:
             case LLM.OLLAMA_LOCAL:
                 return OllamaLocalInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.OPEN_ROUTER:
-                return OpenRouterInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query(user_prompt)
+                return OpenRouterInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.CHAT_GPT:
-                return ChatGPTInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query(user_prompt)
+                return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.VLLM:
                 return VllmInterface(model, system_prompt, temp).query(user_prompt)
+            case LLM.GEMINI:
+                return GeminiInterface(model, system_prompt, temp).query(user_prompt)         
+            case LLM.CHUTES:
+                return ChutesInterface(model, system_prompt, temp).query(user_prompt)
+            case LLM.GROK:
+                raise NotImplementedError("Grok is not implemented yet")
+            case LLM.CLAUDE:
+                raise NotImplementedError("Claude is not implemented yet")
+            case _:
+                raise ValueError("Unknown LLM server")
+            
+    @staticmethod
+    def query_llmv(server: LLM, model: str, 
+                  system_prompt="You are a helpful assistant", 
+                  temp=0.0, user_prompt="", miner_hotkey=None, use_verified_inference=False) -> MinerResponse:
+        match server:
+            case LLM.OLLAMA_LOCAL:
+                raise NotImplementedError("Ollama Local does not support verified inference")
+            case LLM.OPEN_ROUTER:
+                return OpenRouterInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query_verified(user_prompt)
+            case LLM.CHAT_GPT:
+                return ChatGPTInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query_verified(user_prompt)
+            case LLM.VLLM:
+                raise NotImplementedError("VLLM does not support verified inference")
             case LLM.GEMINI:
                 return GeminiInterface(model, system_prompt, temp).query(user_prompt)         
             case LLM.CHUTES:
@@ -99,11 +123,16 @@ class OpenRouterInterface:
         if not self.OPENROUTER_API_KEY:
             raise ValueError("OPENROUTER_API_KEY is not set")
     
-    def query(self, user_prompt) -> MinerResponse:
+    def query(self, user_prompt) -> str:
+        router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
+                            system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_open_router(user_prompt)
+
+    def query_verified(self, user_prompt) -> MinerResponse:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
                             system_prompt=self.system_prompt, temp=self.temp, miner_hotkey=self.miner_hotkey, 
                             use_verified_inference=self.use_verified_inference)
-        return router.call_open_router(user_prompt)    
+        return router.call_open_router_verified(user_prompt)    
    
     
     
@@ -117,8 +146,14 @@ class ChatGPTInterface:
             raise ValueError("CHATGPT_API_KEY is not set")
         self.miner_hotkey = hotkey
         self.use_verified_inference = use_verified_inference
+
+    def query(self, user_prompt) -> str:
+        router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_chat_gpt(user_prompt)
+
         
-    def query(self, user_prompt) -> MinerResponse:
+    def query_verified(self, user_prompt) -> MinerResponse:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
                          system_prompt=self.system_prompt, temp=self.temp, miner_hotkey=self.miner_hotkey, 
                          use_verified_inference=self.use_verified_inference)
