@@ -24,8 +24,7 @@ class ChatGPT:
 
     def call_chat_gpt(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
-            raise ValueError()
-        
+            raise ValueError()        
         if "gpt-5" not in self.model.lower():
             return self.call_chat_gpt_legacy(prompt)
 
@@ -69,14 +68,40 @@ class ChatGPT:
         thing = completion.choices[0].message.content                
         return thing
     
-
+    
     def call_chat_gpt_verified(self, prompt) -> MinerResponse:
-        """used for pre gpt5 models"""
+        """Verified GPT5 Implementation"""
         if not prompt or len(prompt) < 10:
             raise ValueError()
         if not self.use_verified_inference:
             raise ValueError("use_verified_inference must be True for verified inference")
+        if "gpt-5" not in self.model.lower():
+            return self.call_chat_gpt_verified_legacy(prompt)
+        
         url = "https://verified.bitrecs.ai/v1/chat/completions"
+        payload = {
+            "model": self.model,
+            "input": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            "text": {
+                "format": {
+                    "type": "text"
+                },
+                "verbosity": "low"
+            },
+            "reasoning": {
+                "effort": "low"
+            }
+        }        
         headers = {
             "Authorization": f"Bearer {self.CHATGPT_API_KEY}",
             "Content-Type": "application/json",
@@ -84,29 +109,80 @@ class ChatGPT:
             "X-Title": "bitrecs",
             "x-hotkey": self.miner_hotkey,
             "x-provider": "CHAT_GPT"
-        }
-        payload = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": self.temp,
-            "max_tokens": 2048
-        }
+        }      
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
-        chat_response = data["response"]
+        response_output = data["response"]["output"]
+        for output in response_output:
+            if output.get("type") == "message":
+                message_output = output
+                break
+        else:
+            raise ValueError("No message output found in response")        
+        results = message_output["content"][0]["text"]        
         proof = data["proof"]
         signature = data["signature"]
         timestamp = data["timestamp"]
         ttl = data["ttl"]
         miner_response = MinerResponse(
-            results=chat_response['choices'][0]['message']['content'],
+            results=results,
             signed_response=SignedResponse(
-                response=chat_response,
+                response=data["response"],
+                proof=proof,
+                signature=signature,
+                timestamp=timestamp,
+                ttl=ttl 
+            )                    
+        )
+        return miner_response
+    
+    
+    def call_chat_gpt_verified_legacy(self, prompt) -> MinerResponse:
+        """Verified GPT4 Implementation - legacy, use call_chat_gpt_verified for gpt5"""
+        if not prompt or len(prompt) < 10:
+            raise ValueError()
+        if not self.use_verified_inference:
+            raise ValueError("use_verified_inference must be True for verified inference")
+        
+        url = "https://verified.bitrecs.ai/v1/chat/completions"
+        payload = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": self.temp,
+            "max_tokens": 2048
+        }        
+        headers = {
+            "Authorization": f"Bearer {self.CHATGPT_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bitrecs.ai",
+            "X-Title": "bitrecs",
+            "x-hotkey": self.miner_hotkey,
+            "x-provider": "CHAT_GPT"
+        }      
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        results = data["response"]["choices"][0]["message"]["content"]        
+        proof = data["proof"]
+        signature = data["signature"]
+        timestamp = data["timestamp"]
+        ttl = data["ttl"]
+        miner_response = MinerResponse(
+            results=results,
+            signed_response=SignedResponse(
+                response=data["response"],
                 proof=proof,
                 signature=signature,
                 timestamp=timestamp,
                 ttl=ttl
-            )                    
+            )
         )
         return miner_response
+
+    

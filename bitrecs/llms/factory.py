@@ -106,7 +106,7 @@ class OllamaLocalInterface:
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
-    def query(self, user_prompt) -> MinerResponse:
+    def query(self, user_prompt) -> str:
         llm = OllamaLocal(ollama_url=self.OLLAMA_LOCAL_URL, model=self.model, 
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
@@ -157,7 +157,7 @@ class ChatGPTInterface:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
                          system_prompt=self.system_prompt, temp=self.temp, miner_hotkey=self.miner_hotkey, 
                          use_verified_inference=self.use_verified_inference)
-        return router.call_chat_gpt(user_prompt)
+        return router.call_chat_gpt_verified(user_prompt)
     
     
 class VllmInterface:

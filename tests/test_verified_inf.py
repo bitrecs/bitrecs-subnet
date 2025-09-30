@@ -55,7 +55,7 @@ async def test_openrouter_verified_inf():
     products = ProductFactory.dedupe(raw_products)    
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
-    num_recs = safe_random.choice([3, 4, 5])
+    num_recs = safe_random.choice([3, 4, 5])    
     debug_prompts = False
 
     match = [products for products in products if products.sku == user_prompt][0]
@@ -77,7 +77,9 @@ async def test_openrouter_verified_inf():
     
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
-    model = "x-ai/grok-4-fast:free"
+    #model = "x-ai/grok-4-fast:free"
+    model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    #model = "deepseek/deepseek-v3.2-exp"
     provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
