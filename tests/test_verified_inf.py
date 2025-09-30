@@ -53,7 +53,8 @@ def product_20k():
 
 @pytest.mark.asyncio
 async def test_openrouter_verified_inf():
-    raw_products = product_woo()      
+    raw_products = product_woo()    
+    #raw_products = product_shopify()
     products = ProductFactory.dedupe(raw_products)    
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
@@ -78,9 +79,9 @@ async def test_openrouter_verified_inf():
     print(f"token count: {tc}")    
     
     #model = "ai21/jamba-mini-1.7"    
-    model = "qwen/qwen3-next-80b-a3b-instruct"
+    #model = "qwen/qwen3-next-80b-a3b-instruct"
     #model = "x-ai/grok-4-fast:free"
-    #model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    model = "google/gemini-2.5-flash-lite-preview-09-2025"
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp"
     provider = LLM.OPEN_ROUTER
@@ -89,8 +90,8 @@ async def test_openrouter_verified_inf():
     #model = "gpt-5-nano"
     #provider = LLM.CHAT_GPT
 
-    model = "gemini-2.5-flash-lite-preview-09-2025"
-    provider = LLM.GEMINI
+    #model = "gemini-2.5-flash-lite-preview-09-2025"
+    #provider = LLM.GEMINI
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()

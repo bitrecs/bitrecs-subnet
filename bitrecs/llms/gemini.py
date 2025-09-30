@@ -1,5 +1,5 @@
-from openai import OpenAI
 import requests
+from openai import OpenAI
 from bitrecs.protocol import MinerResponse, SignedResponse
 from bitrecs.utils import constants as CONST
 
