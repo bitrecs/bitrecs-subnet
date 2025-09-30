@@ -2,6 +2,7 @@ import json
 import requests
 from openai import OpenAI
 from bitrecs.protocol import MinerResponse, SignedResponse
+from bitrecs.utils import constants as CONST
 
 class OpenRouter:    
     def __init__(self, 
@@ -89,7 +90,7 @@ class OpenRouter:
             "HTTP-Referer": "https://bitrecs.ai",
             "X-Title": "bitrecs"
         }
-        url = "https://verified.bitrecs.ai/v1/chat/completions"
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         headers["x-hotkey"] = self.miner_hotkey
         headers["x-provider"] = "OPEN_ROUTER"
       

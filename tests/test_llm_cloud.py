@@ -745,6 +745,223 @@ def test_latest_openrouter_model():
     assert user_prompt not in skus
 
 
+
+@pytest.mark.skip(reason="skipped")
+def test_cerebras():
+    raw_products = product_woo()      
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)
+    print(f"\033[32mSelected product: {match.sku} - {match.name} \033[0m")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")    
+    
+    #model = "llama-4-scout-17b-16e-instruct"    
+    model = "llama-4-maverick-17b-128e-instruct"
+    provider = LLM.CEREBRAS
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    st = time.time()
+    llm_response = LLMFactory.query_llm(server=provider,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, 
+                                 user_prompt=prompt)
+    et = time.time()
+    diff = et - st  
+    print(f"LLM response time: {diff:.2f} seconds")
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+    assert len(parsed_recs) == num_recs    
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+    assert user_prompt not in skus
+
+
+#@pytest.mark.skip(reason="skipped")
+def test_grok():
+    raw_products = product_woo()      
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)
+    print(f"\033[32mSelected product: {match.sku} - {match.name} \033[0m")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")        
+    
+    model = "grok-4-fast-non-reasoning"
+    provider = LLM.GROK
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    st = time.time()
+    llm_response = LLMFactory.query_llm(server=provider,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, 
+                                 user_prompt=prompt)
+    et = time.time()
+    diff = et - st  
+    print(f"LLM response time: {diff:.2f} seconds")
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+    assert len(parsed_recs) == num_recs    
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+    assert user_prompt not in skus
+
+
+
+
+#@pytest.mark.skip(reason="skipped")
+def test_claude():
+    raw_products = product_woo()      
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)
+    print(f"\033[32mSelected product: {match.sku} - {match.name} \033[0m")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")        
+    
+    #model = "claude-3-haiku-20240307"
+    model = "claude-3-5-haiku-20241022"
+    provider = LLM.CLAUDE
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    st = time.time()
+    llm_response = LLMFactory.query_llm(server=provider,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, 
+                                 user_prompt=prompt)
+    et = time.time()
+    diff = et - st  
+    print(f"LLM response time: {diff:.2f} seconds")
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+    assert len(parsed_recs) == num_recs    
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+    assert user_prompt not in skus
+
+
+
+#@pytest.mark.skip(reason="skipped")
+def test_groq():
+    raw_products = product_woo()      
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)
+    print(f"\033[32mSelected product: {match.sku} - {match.name} \033[0m")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")
+    
+    #model = "llama-3.1-8b-instant"
+    model = "groq/compound"
+    #model = "groq/compound-mini"
+    provider = LLM.GROQ
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    st = time.time()
+    llm_response = LLMFactory.query_llm(server=provider,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, 
+                                 user_prompt=prompt)
+    et = time.time()
+    diff = et - st  
+    print(f"LLM response time: {diff:.2f} seconds")
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+    assert len(parsed_recs) == num_recs    
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+    assert user_prompt not in skus
+
+
+
+
+
+
+
 def query_llm_with_timeout(server, model, system_prompt, temp, user_prompt, timeout=30):   
     with ThreadPoolExecutor(max_workers=1) as ex:
         fut = ex.submit(
@@ -821,7 +1038,8 @@ def test_cycle_models_and_store_results():
         #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
         #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
         {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-next-80b-a3b-instruct"},
-        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4-fast:free"}        
+        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4-fast:free"},
+        {"provider": LLM.OPEN_ROUTER, "model":"google/gemini-2.5-flash-lite-preview-09-2025"}
 
     ]
     

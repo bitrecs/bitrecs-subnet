@@ -2,6 +2,7 @@ import requests
 from openai import OpenAI
 from openai.types.responses import Response
 from bitrecs.protocol import MinerResponse, SignedResponse
+from bitrecs.utils import constants as CONST
 
 class ChatGPT:
     def __init__(self, 
@@ -78,7 +79,7 @@ class ChatGPT:
         if "gpt-5" not in self.model.lower():
             return self.call_chat_gpt_verified_legacy(prompt)
         
-        url = "https://verified.bitrecs.ai/v1/chat/completions"
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         payload = {
             "model": self.model,
             "input": [
@@ -145,7 +146,7 @@ class ChatGPT:
         if not self.use_verified_inference:
             raise ValueError("use_verified_inference must be True for verified inference")
         
-        url = "https://verified.bitrecs.ai/v1/chat/completions"
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         payload = {
             "model": self.model,
             "messages": [

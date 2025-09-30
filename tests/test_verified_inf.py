@@ -16,8 +16,10 @@ from bitrecs.llms.prompt_factory import PromptFactory
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from dotenv import load_dotenv
 load_dotenv()
+from bitrecs.utils import constants as CONST
 
 VERIFIED_URL = "https://verified.bitrecs.ai"
+VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
@@ -76,15 +78,19 @@ async def test_openrouter_verified_inf():
     print(f"token count: {tc}")    
     
     #model = "ai21/jamba-mini-1.7"    
-    #model = "qwen/qwen3-next-80b-a3b-instruct"
+    model = "qwen/qwen3-next-80b-a3b-instruct"
     #model = "x-ai/grok-4-fast:free"
-    model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    #model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp"
     provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
     #model = "gpt-5-nano"
     #provider = LLM.CHAT_GPT
+
+    model = "gemini-2.5-flash-lite-preview-09-2025"
+    provider = LLM.GEMINI
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
