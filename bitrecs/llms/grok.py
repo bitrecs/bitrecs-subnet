@@ -1,4 +1,7 @@
 from openai import OpenAI
+import requests
+from bitrecs.utils import constants as CONST
+from bitrecs.protocol import MinerResponse, SignedResponse
 
 class Grok:
     def __init__(self, 
@@ -41,3 +44,56 @@ class Grok:
         )
         thing = completion.choices[0].message.content                
         return thing
+    
+    
+    def call_grok_verified(self, prompt) -> MinerResponse:
+        """Verified Grok Implementation"""
+        if not prompt or len(prompt) < 10:
+            raise ValueError()
+        if not self.use_verified_inference:
+            raise ValueError("use_verified_inference must be True for verified inference")
+             
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"        
+        payload = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": self.system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": self.temp,
+            "max_tokens": 2048,
+            "stream": False
+        }        
+        headers = {
+            "Authorization": f"Bearer {self.GROK_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bitrecs.ai",
+            "X-Title": "bitrecs",
+            "x-hotkey": self.miner_hotkey,
+            "x-provider": "GROK"
+        }      
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        results = data["response"]['choices'][0]['message']['content']
+        proof = data["proof"]
+        signature = data["signature"]
+        timestamp = data["timestamp"]
+        ttl = data["ttl"]
+        miner_response = MinerResponse(
+            results=results,
+            signed_response=SignedResponse(
+                response=data["response"],
+                proof=proof,
+                signature=signature,
+                timestamp=timestamp,
+                ttl=ttl 
+            )                    
+        )
+        return miner_response

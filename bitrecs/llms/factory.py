@@ -78,9 +78,13 @@ class LLMFactory:
             case LLM.CHUTES:
                 return ChutesInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query_verified(user_prompt)
             case LLM.GROK:
-                raise NotImplementedError("Grok is not implemented yet")
+                return GrokInterface(model, system_prompt, temp, miner_hotkey, use_verified_inference).query_verified(user_prompt)
             case LLM.CLAUDE:
                 raise NotImplementedError("Claude is not implemented yet")
+            case LLM.CEREBRAS:
+                raise NotImplementedError("Cerebras is not implemented yet")
+            case LLM.GROQ:
+                raise NotImplementedError("Groq is not implemented yet")
             case _:
                 raise ValueError("Unknown LLM server")
             
@@ -232,10 +236,18 @@ class GrokInterface:
         
     def query(self, user_prompt) -> str:
         router = Grok(self.GROK_API_KEY, model=self.model, 
-                         system_prompt=self.system_prompt, temp=self.temp, 
-                         miner_hotkey=self.miner_hotkey, 
-                         use_verified_inference=self.use_verified_inference)
+                        system_prompt=self.system_prompt, temp=self.temp, 
+                        miner_hotkey=self.miner_hotkey, 
+                        use_verified_inference=self.use_verified_inference)
         return router.call_grok(user_prompt)
+    
+    def query_verified(self, user_prompt) -> MinerResponse:
+        router = Grok(self.GROK_API_KEY, model=self.model,
+                    system_prompt=self.system_prompt, temp=self.temp, 
+                    miner_hotkey=self.miner_hotkey, 
+                    use_verified_inference=self.use_verified_inference)
+        return router.call_grok_verified(user_prompt)
+    
 
 
 class ClaudeInterface:
