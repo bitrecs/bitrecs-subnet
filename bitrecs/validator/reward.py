@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import base64
 import json
 import hashlib
 import numpy as np
@@ -25,11 +26,11 @@ import json_repair
 from typing import List
 from datetime import datetime, timezone
 from bitrecs.commerce.user_action import UserAction
-from bitrecs.protocol import BitrecsRequest
+from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.reasoning import ReasonReport
-
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
@@ -104,6 +105,7 @@ def verify_response_signature(response: BitrecsRequest) -> bool:
             "models_used": response.models_used,
             "miner_uid": response.miner_uid,
             "miner_hotkey": response.miner_hotkey,
+            "verified_proof": response.verified_proof
         }
         payload_str = json.dumps(payload, sort_keys=True)
         payload_hash = hashlib.sha256(payload_str.encode("utf-8")).digest()
@@ -127,6 +129,26 @@ def verify_time(response: BitrecsRequest) -> bool:
     return True
 
 
+def verify_proof(
+    response:  SignedResponse, 
+    public_key: Ed25519PublicKey
+) -> bool:
+    """Verify the proof of inference"""
+    proof = response.proof
+    signature_b64 = response.signature
+    #print(f"Proof: {proof}")
+    #print(f"Signature (base64): {signature_b64}")   
+    try:
+        signature_bytes = base64.b64decode(signature_b64)
+        serialized_proof = json.dumps(proof, sort_keys=True).encode()
+        public_key.verify(signature_bytes, serialized_proof)
+        return True
+    except Exception as e:
+        #print(f"Verification failed: {e}")
+        bt.logging.error(f"verify_proof Verification failed: {e}")
+        return False
+
+
 def reward(
     validator_hotkey: str,
     ground_truth: BitrecsRequest,
@@ -135,7 +157,8 @@ def reward(
     reasoning_report: ReasonReport = None,
     actions: List[UserAction] = None,
     r_limit: float = 1.0,
-    max_f_score: float = 1.0
+    max_f_score: float = 1.0,
+    verified_public_key: Ed25519PublicKey = None
 ) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
@@ -200,7 +223,15 @@ def reward(
             return 0.0
         if not validate_result_schema(ground_truth.num_results, response.results):
             bt.logging.error(f"{response.miner_uid} failed schema validation: {response.miner_hotkey[:8]}")
-            return 0.0      
+            return 0.0
+        
+        if response.verified_proof and verified_public_key:
+            verified = verify_proof(response.verified_proof, verified_public_key)
+            if not verified:
+                bt.logging.error(f"{response.miner_uid} Verified Failed: {response.miner_hotkey[:8]}")
+            else:
+                 bt.logging.trace(f"\033[32m{response.miner_uid} Verified Success: {response.miner_hotkey[:8]}\033[0m")
+
         
         valid_items = set()
         query_lower = response.query.lower().strip()
@@ -258,7 +289,8 @@ def get_rewards(
     actions: List[UserAction] = None,    
     r_limit: float = 1.0,
     batch_size: int = 16,
-    entity_threshold: float = 0.2
+    entity_threshold: float = 0.2,
+    verified_public_key: Ed25519PublicKey = None
 ) -> np.ndarray:
     """
     Returns an array of rewards for the given query and responses.
@@ -355,7 +387,7 @@ def get_rewards(
         
         r_report = get_reasoning_report(response, reasoning_reports)
         max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
-        miner_reward = reward(validator_hotkey, ground_truth, catalog_validator, response, r_report, actions, r_limit, max_f_score)
+        miner_reward = reward(validator_hotkey, ground_truth, catalog_validator, response, r_report, actions, r_limit, max_f_score, verified_public_key)
         if miner_reward <= 0.0:
             rewards.append(0.0)
             continue

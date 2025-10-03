@@ -18,7 +18,6 @@ from dotenv import load_dotenv
 load_dotenv()
 from bitrecs.utils import constants as CONST
 
-VERIFIED_URL = "https://verified.bitrecs.ai"
 VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
 
 def product_woo():
@@ -83,7 +82,13 @@ async def test_openrouter_verified_inf():
     #model = "x-ai/grok-4-fast:free"
     #model = "google/gemini-2.5-flash-lite-preview-09-2025"
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
-    #model = "deepseek/deepseek-v3.2-exp"
+    #model = "deepseek/deepseek-v3.2-exp" timeout
+    #model = "meituan/longcat-flash-chat"
+    #model = "nvidia/nemotron-nano-9b-v2"
+    #model = "meta-llama/llama-4-maverick"
+    #model = "meta-llama/llama-4-scout"
+    #model = "qwen/qwen-turbo"
+    #model = "amazon/nova-lite-v1"
     #provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
@@ -99,7 +104,7 @@ async def test_openrouter_verified_inf():
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
 
-    hotkey = "ASLJALSJASLKFJALSKJDFK"
+    hotkey = "5ChvSkb7Gfy7pypH5Cxo9QP2DMEJ88kwFnZvnCwESD66KVzD"
     llm_response = LLMFactory.query_llmv(server=provider,
                                  model=model,
                                  system_prompt="You are a helpful assistant", 
@@ -113,7 +118,7 @@ async def test_openrouter_verified_inf():
 
     public_key = await get_public_key()
     response = llm_response.signed_response
-    assert verify_signature(response, public_key), "Signature verification failed"
+    assert verify_proof(response, public_key), "Signature verification failed"
     print(f"\033[32mSignature verification succeeded \033[0m")
 
     parsed_recs = PromptFactory.tryparse_llm(llm_response.results)
@@ -138,7 +143,7 @@ async def get_public_key() -> Ed25519PublicKey:
         return Ed25519PublicKey.from_public_bytes(raw_bytes)    
 
 
-def verify_signature(
+def verify_proof(
     response:  SignedResponse, 
     public_key: Ed25519PublicKey
 ) -> bool:

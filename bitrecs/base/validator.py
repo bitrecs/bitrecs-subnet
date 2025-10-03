@@ -17,9 +17,11 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+import json
 import os
 import copy
 import time
+import httpx
 import wandb
 import anyio
 import asyncio
@@ -67,7 +69,7 @@ from bitrecs.utils.logging import (
 )
 from bitrecs.utils.wandb import WandbHelper
 from bitrecs.commerce.user_action import UserAction
-
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 original_trace = bt.logging.trace
 def filtered_trace(message, *args, **kwargs):
@@ -103,7 +105,8 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
             models_used=[""],
             miner_uid="",
             miner_hotkey="",
-            miner_signature=None
+            miner_signature=None,
+            verified_proof=None
         )
     )
     API_QUEUE.put(synapse_with_event)
@@ -196,6 +199,9 @@ class BaseValidatorNeuron(BaseNeuron):
 
         self.reasoning_reports: List[ReasonReport] = []    
         self.missing_evals_uids = set()    
+
+        self.verified_public_key = None
+        anyio.run(self.get_verified_public_key, backend="asyncio")
         
         write_node_info(
             network=self.network,
@@ -230,6 +236,17 @@ class BaseValidatorNeuron(BaseNeuron):
 
         bt.logging.info(f"Validator Initialized at block: {self.block}")
 
+
+    async def get_verified_public_key() -> Ed25519PublicKey:
+        """Get public key from verifier"""    
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            public_key_response = await client.get(f"{CONST.VERIFIED_INFERENCE_URL}/public_key")
+            public_key_response.raise_for_status()
+            public_key_string = json.loads(public_key_response.text)["public_key"]
+            raw_bytes = bytes.fromhex(public_key_string)
+            return Ed25519PublicKey.from_public_bytes(raw_bytes)
+
+
     def update_total_uids(self):        
         uids, cooldown_uids = get_all_miner_uids(self, 
             banned_coldkeys=self.banned_coldkeys,
@@ -242,6 +259,7 @@ class BaseValidatorNeuron(BaseNeuron):
         )
         self.suspect_miners = cooldown_uids
         bt.logging.info(f"Total UIDs updated: {len(self.total_uids)}")
+
 
     async def start_new_tempo(self):        
         all_miners = list(self.total_uids)
@@ -258,6 +276,7 @@ class BaseValidatorNeuron(BaseNeuron):
             self.batch_orphan_uids = set()
             bt.logging.info(f"New tempo started with {len(self.tempo_batches)} batches of size {batch_size}")
 
+
     async def get_next_batch(self) -> List[int]:
         async with self.lock:
             if not hasattr(self, 'tempo_batches') or not self.tempo_batches:
@@ -273,6 +292,7 @@ class BaseValidatorNeuron(BaseNeuron):
             self.tempo_batch_index = (self.tempo_batch_index + 1) % len(self.tempo_batches)
             self.batches_completed += 1
             return batch
+
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -516,7 +536,8 @@ class BaseValidatorNeuron(BaseNeuron):
                                               actions=self.user_actions,
                                               r_limit=self.r_limit,
                                               batch_size=CONST.QUERY_BATCH_SIZE,
-                                              entity_threshold=CONST.BATCH_ENTITY_THRESHOLD)
+                                              entity_threshold=CONST.BATCH_ENTITY_THRESHOLD,
+                                              verified_public_key=self.verified_public_key)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
