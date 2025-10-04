@@ -116,7 +116,10 @@ class OpenRouter:
                 }],
             "reasoning": reasoning,
             "stream": False,
-            "temperature": self.temp
+            "temperature": self.temp,
+            # "thinking": {
+            #     "type": "disabled"
+            # },
         }
         
         timeout = (5, 30) #connect, read timeout

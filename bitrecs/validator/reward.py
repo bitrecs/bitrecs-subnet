@@ -133,7 +133,7 @@ def verify_proof(
     response:  SignedResponse, 
     public_key: Ed25519PublicKey
 ) -> bool:
-    """Verify the proof of inference"""
+    """Verify proof of inference"""
     proof = response.proof
     signature_b64 = response.signature
     #print(f"Proof: {proof}")

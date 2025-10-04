@@ -52,8 +52,8 @@ def product_20k():
 
 @pytest.mark.asyncio
 async def test_openrouter_verified_inf():
-    #raw_products = product_woo()    
-    raw_products = product_shopify()
+    raw_products = product_woo()    
+    #raw_products = product_shopify()
     products = ProductFactory.dedupe(raw_products)    
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
@@ -84,19 +84,21 @@ async def test_openrouter_verified_inf():
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp" timeout
     #model = "meituan/longcat-flash-chat"
-    #model = "nvidia/nemotron-nano-9b-v2"
+    model = "nvidia/nemotron-nano-9b-v2"
     #model = "meta-llama/llama-4-maverick"
     #model = "meta-llama/llama-4-scout"
     #model = "qwen/qwen-turbo"
     #model = "amazon/nova-lite-v1"
-    #provider = LLM.OPEN_ROUTER
+    #model = "z-ai/glm-4.6"
+    #model = "moonshotai/kimi-k2-0905"
+    provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
     #model = "gpt-5-nano"
     #provider = LLM.CHAT_GPT
 
-    model = "gemini-2.5-flash-lite-preview-09-2025"
-    provider = LLM.GEMINI
+    #model = "gemini-2.5-flash-lite-preview-09-2025"
+    #provider = LLM.GEMINI
 
     #model = "grok-4-fast-non-reasoning"
     #provider = LLM.GROK

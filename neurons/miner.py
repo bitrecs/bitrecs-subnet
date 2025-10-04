@@ -70,7 +70,7 @@ async def do_work(user_prompt: str,
         system_prompt (str): The system prompt for the LLM.
         profile (UserProfile): The user profile to use when generating recommendations.
         debug_prompts (bool): Whether to log debug information about the prompts.
-        use_verified (bool): Whether to use verified inference (if supported by the LLM).
+        use_verified (bool): Whether to use verified inference.
         miner_hotkey (str): The miner's hotkey to sign the verified inference proof (if applicable).
 
     Returns:
@@ -82,7 +82,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work LLM model: {model}")  
     bt.logging.trace(f"do_work profile: {profile}")
 
-    miner_response = MinerResponse()
+    miner_response : MinerResponse = None
     factory = PromptFactory(sku=user_prompt,
                             context=context, 
                             num_recs=num_recs,                                                         
@@ -91,15 +91,19 @@ async def do_work(user_prompt: str,
     prompt = factory.generate_prompt()
     try:
         if not use_verified:
-            miner_response.results = LLMFactory.query_llm(server=server, 
-                                                model=model, 
-                                                system_prompt=system_prompt, 
-                                                temp=0.0, user_prompt=prompt)            
+            results = LLMFactory.query_llm(server=server, 
+                                            model=model, 
+                                            system_prompt=system_prompt, 
+                                            temp=0.0,
+                                            user_prompt=prompt)
+            miner_response = MinerResponse(results=results, signed_response=None)
+
         else:
-            miner_response = LLMFactory.query_llmv(server=server, 
-                                                model=model, 
+            miner_response = LLMFactory.query_llmv(server=server,
+                                                model=model,
                                                 system_prompt=system_prompt, 
-                                                temp=0.0, user_prompt=prompt,
+                                                temp=0.0,
+                                                user_prompt=prompt,
                                                 miner_hotkey=miner_hotkey,
                                                 use_verified_inference=True)
 
@@ -177,8 +181,10 @@ class Miner(BaseMinerNeuron):
         self.use_verified_inference : bool = self.config.verified.inference
         if self.use_verified_inference:
             bt.logging.info(f"\033[1;32m 🐸 Miner using VERIFIED INFERENCE\033[0m")
+            bt.logging.info(f"To be trusted is a greater compliment than to be loved. - George MacDonald")
         else:
             bt.logging.info(f"\033[1;33m 🐸 Miner using STANDARD INFERENCE\033[0m")
+            bt.logging.info(f"I'm not upset that you lied to me, I'm upset that from now on I can't believe you. - Friedrich Nietzsche")
     
 
     async def forward(
@@ -214,7 +220,7 @@ class Miner(BaseMinerNeuron):
                                     profile=user_profile,
                                     debug_prompts=debug_prompts,
                                     use_verified=self.use_verified_inference,
-                                    miner_hotkey=self.wallet.hotkey.ss58_address)            
+                                    miner_hotkey=self.wallet.hotkey.ss58_address)
             if not miner_response:
                 bt.logging.error("LLM response is empty.")
                 raise ValueError("LLM response is empty.")
