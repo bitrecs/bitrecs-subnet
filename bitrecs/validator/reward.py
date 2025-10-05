@@ -89,7 +89,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
-def verify_response_signature(response: BitrecsRequest) -> bool:
+def verify_miner_signature(response: BitrecsRequest) -> bool:
     try:
         if not response.miner_signature:
             bt.logging.error("Response missing miner_signature")
@@ -136,16 +136,13 @@ def verify_proof(
 ) -> bool:
     """Verify proof of inference"""
     proof = response.proof
-    signature_b64 = response.signature
-    #print(f"Proof: {proof}")
-    #print(f"Signature (base64): {signature_b64}")   
+    signature_b64 = response.signature    
     try:
         signature_bytes = base64.b64decode(signature_b64)
         serialized_proof = json.dumps(proof, sort_keys=True).encode()
         public_key.verify(signature_bytes, serialized_proof)
         return True
-    except Exception as e:
-        #print(f"Verification failed: {e}")
+    except Exception as e:        
         bt.logging.error(f"verify_proof Verification failed: {e}")
         return False
 
@@ -195,7 +192,7 @@ def reward(
         if not verify_time(response):
             bt.logging.error(f"{response.axon.hotkey[:8]} response time verification failed")
             return 0.0
-        if not verify_response_signature(response):
+        if not verify_miner_signature(response):
             bt.logging.error(f"{response.axon.hotkey[:8]} signature verification failed")
             return 0.0
         if not response.miner_uid or not response.miner_hotkey:
@@ -257,15 +254,14 @@ def reward(
             if not reasoning_report:
                 score = BASE_REWARD / 4
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report score:{score}\033[0m")
-                #return score
             elif reasoning_report.f_score <= 0:
                 score = BASE_REWARD / 2
-                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning score:{score}\033[0m")                
+                bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning score:{score}\033[0m")
             else:
                 f_score = min(reasoning_report.f_score, max_f_score)
                 score = BASE_REWARD + f_score
                 score *= REASONING_BONUS_MULTIPLIER
-                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")     
+                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")
 
         if response.verified_proof and verified_public_key:
             signed_response = SignedResponse(**response.verified_proof)

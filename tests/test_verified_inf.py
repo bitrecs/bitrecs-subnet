@@ -88,9 +88,9 @@ async def test_openrouter_verified_inf():
     #model = "meta-llama/llama-4-maverick"
     #model = "meta-llama/llama-4-scout"
     #model = "qwen/qwen-turbo"
-    #model = "amazon/nova-lite-v1"
+    model = "amazon/nova-lite-v1"
     #model = "z-ai/glm-4.6"
-    model = "moonshotai/kimi-k2-0905"
+    #model = "moonshotai/kimi-k2-0905"
     provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"

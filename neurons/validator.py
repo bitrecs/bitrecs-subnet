@@ -375,10 +375,10 @@ class Validator(BaseValidatorNeuron):
   
     
     @execute_periodically(timedelta(seconds=CONST.VERFIED_KEY_SYNC_INTERVAL))
-    async def verfied_sync(self):
+    async def verified_sync(self):
         self.verified_public_key = None
 
-        async def verified_public_key():
+        async def get_verified_public_key():
             async with httpx.AsyncClient(timeout=30.0) as client:
                 public_key_response = await client.get(f"{CONST.VERIFIED_INFERENCE_URL}/public_key")
                 public_key_response.raise_for_status()
@@ -387,7 +387,7 @@ class Validator(BaseValidatorNeuron):
                 return Ed25519PublicKey.from_public_bytes(raw_bytes)
          
         bt.logging.info(f"\033[35mVerified sync ran at {int(time.time())}\033[0m")
-        self.verified_public_key = await verified_public_key()
+        self.verified_public_key = await get_verified_public_key()
         if self.verified_public_key:
             bt.logging.info(f"\033[32mVerified public key loaded successfully\033[0m")
         else:
@@ -406,7 +406,7 @@ async def main():
         validator.update_total_uids()
         while True:
             tasks = [
-                asyncio.create_task(validator.verfied_sync()),
+                asyncio.create_task(validator.verified_sync()),
                 asyncio.create_task(validator.tempo_sync()),
                 asyncio.create_task(validator.version_sync()),
                 asyncio.create_task(validator.r2_sync()),
