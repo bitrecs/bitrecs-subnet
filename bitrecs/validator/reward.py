@@ -35,6 +35,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
+VERFIED_BONUS_MULTIPLIER = 1.25
 SUSPECT_MINER_DECAY = 0.980
 
 
@@ -223,16 +224,8 @@ def reward(
             return 0.0
         if not validate_result_schema(ground_truth.num_results, response.results):
             bt.logging.error(f"{response.miner_uid} failed schema validation: {response.miner_hotkey[:8]}")
-            return 0.0
-        
-        if response.verified_proof and verified_public_key:
-            verified = verify_proof(response.verified_proof, verified_public_key)
-            if not verified:
-                bt.logging.error(f"{response.miner_uid} Verified Failed: {response.miner_hotkey[:8]}")
-            else:
-                 bt.logging.trace(f"\033[32m{response.miner_uid} Verified Success: {response.miner_hotkey[:8]}\033[0m")
-
-        
+            return 0.0        
+     
         valid_items = set()
         query_lower = response.query.lower().strip()
         for result in response.results:
@@ -264,7 +257,7 @@ def reward(
             if not reasoning_report:
                 score = BASE_REWARD / 4
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report score:{score}\033[0m")
-                return score
+                #return score
             elif reasoning_report.f_score <= 0:
                 score = BASE_REWARD / 2
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning score:{score}\033[0m")                
@@ -272,8 +265,17 @@ def reward(
                 f_score = min(reasoning_report.f_score, max_f_score)
                 score = BASE_REWARD + f_score
                 score *= REASONING_BONUS_MULTIPLIER
-                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")
-     
+                bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")     
+
+        if response.verified_proof and verified_public_key:
+            verified = verify_proof(response.verified_proof, verified_public_key)
+            if not verified:
+                score = BASE_REWARD / 8
+                bt.logging.error(f"{response.miner_uid} Verified Failed: {response.miner_hotkey[:8]}")
+            else:
+                score *= VERFIED_BONUS_MULTIPLIER
+                bt.logging.trace(f"\033[32m{response.miner_uid} Verified Success: {response.miner_hotkey[:8]}\033[0m")
+
         return score
     except Exception as e:
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")

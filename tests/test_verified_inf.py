@@ -84,13 +84,13 @@ async def test_openrouter_verified_inf():
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp" timeout
     #model = "meituan/longcat-flash-chat"
-    model = "nvidia/nemotron-nano-9b-v2"
+    #model = "nvidia/nemotron-nano-9b-v2"
     #model = "meta-llama/llama-4-maverick"
     #model = "meta-llama/llama-4-scout"
     #model = "qwen/qwen-turbo"
     #model = "amazon/nova-lite-v1"
     #model = "z-ai/glm-4.6"
-    #model = "moonshotai/kimi-k2-0905"
+    model = "moonshotai/kimi-k2-0905"
     provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
@@ -118,10 +118,15 @@ async def test_openrouter_verified_inf():
     diff = et - st  
     print(f"LLM response time: {diff:.2f} seconds")
 
+    # Local Verification
     public_key = await get_public_key()
     response = llm_response.signed_response
     assert verify_proof(response, public_key), "Signature verification failed"
-    print(f"\033[32mSignature verification succeeded \033[0m")
+    print(f"\033[32mLOCAL Signature verification succeeded \033[0m")
+
+    # Remote verification
+    assert remote_verify_proof(response), "Remote signature verification failed"
+    print(f"\033[32mREMOTE signature verification succeeded \033[0m")
 
     parsed_recs = PromptFactory.tryparse_llm(llm_response.results)
     print(f"parsed {len(parsed_recs)} records")
@@ -163,4 +168,19 @@ def verify_proof(
         return True
     except Exception as e:
         print(f"Verification failed: {e}")
+        return False
+    
+
+def remote_verify_proof(signed_response: SignedResponse) -> bool:
+    """Remote verify the signature of the response."""
+    print(f"RAW signed response: {signed_response}")
+    payload = signed_response.model_dump()
+    try:
+        r = httpx.post(f"{VERIFIED_URL}/verify", json=payload, timeout=30.0)
+        r.raise_for_status()
+        result = r.json()
+        print(f"Remote verification result: {result}")
+        return result.get("valid", False)
+    except Exception as e:
+        print(f"Remote verification failed: {e}")
         return False
