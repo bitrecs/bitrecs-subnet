@@ -45,7 +45,7 @@ def test_version_returns_ok():
     assert len(v) > 0
     print(f"Version: {v}")
     assert v == this_version
-    assert v == "0.8.7"
+    assert v == "0.8.8"
 
 
 def test_version_spec_returns_ok():
