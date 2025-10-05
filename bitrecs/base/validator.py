@@ -198,10 +198,9 @@ class BaseValidatorNeuron(BaseNeuron):
         self.batches_completed = 0
 
         self.reasoning_reports: List[ReasonReport] = []    
-        self.missing_evals_uids = set()    
+        self.missing_evals_uids = set()
 
         self.verified_public_key = None
-        anyio.run(self.get_verified_public_key, backend="asyncio")
         
         write_node_info(
             network=self.network,
@@ -235,16 +234,6 @@ class BaseValidatorNeuron(BaseNeuron):
                 )
 
         bt.logging.info(f"Validator Initialized at block: {self.block}")
-
-
-    async def get_verified_public_key() -> Ed25519PublicKey:
-        """Get public key from verifier"""    
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            public_key_response = await client.get(f"{CONST.VERIFIED_INFERENCE_URL}/public_key")
-            public_key_response.raise_for_status()
-            public_key_string = json.loads(public_key_response.text)["public_key"]
-            raw_bytes = bytes.fromhex(public_key_string)
-            return Ed25519PublicKey.from_public_bytes(raw_bytes)
 
 
     def update_total_uids(self):        

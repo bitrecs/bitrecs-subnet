@@ -16,10 +16,12 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import json
 import os
 import time
 import bittensor as bt
 import asyncio
+import httpx
 import numpy as np
 import traceback
 import requests
@@ -44,6 +46,8 @@ from bitrecs.metrics.score_metrics import (
     run_complete_score_analysis
 )
 from bitrecs.utils.reasoning import ReasonReport
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
 
 validator_instance = None  # Global reference for signal handler
 
@@ -369,7 +373,28 @@ class Validator(BaseValidatorNeuron):
         except Exception as e:
             bt.logging.error(f"reasoning_sync Exception: {e}")
   
+    
+    @execute_periodically(timedelta(seconds=CONST.VERFIED_KEY_SYNC_INTERVAL))
+    async def verfied_sync(self):
+        self.verified_public_key = None
 
+        async def verified_public_key():
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                public_key_response = await client.get(f"{CONST.VERIFIED_INFERENCE_URL}/public_key")
+                public_key_response.raise_for_status()
+                public_key_string = json.loads(public_key_response.text)["public_key"]
+                raw_bytes = bytes.fromhex(public_key_string)
+                return Ed25519PublicKey.from_public_bytes(raw_bytes)
+         
+        bt.logging.info(f"\033[35mVerified sync ran at {int(time.time())}\033[0m")
+        self.verified_public_key = await verified_public_key()
+        if self.verified_public_key:
+            bt.logging.info(f"\033[32mVerified public key loaded successfully\033[0m")
+        else:
+            bt.logging.error(f"\033[31mFailed to load verified public key\033[0m")
+            raise Exception("Failed to load verified public key")
+
+    
 
 async def main():
     global validator_instance
@@ -381,6 +406,7 @@ async def main():
         validator.update_total_uids()
         while True:
             tasks = [
+                asyncio.create_task(validator.verfied_sync()),
                 asyncio.create_task(validator.tempo_sync()),
                 asyncio.create_task(validator.version_sync()),
                 asyncio.create_task(validator.r2_sync()),
