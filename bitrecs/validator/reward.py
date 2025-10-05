@@ -268,7 +268,8 @@ def reward(
                 bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")     
 
         if response.verified_proof and verified_public_key:
-            verified = verify_proof(response.verified_proof, verified_public_key)
+            signed_response = SignedResponse(**response.verified_proof)
+            verified = verify_proof(signed_response, verified_public_key)
             if not verified:
                 score = BASE_REWARD / 8
                 bt.logging.error(f"{response.miner_uid} Verified Failed: {response.miner_hotkey[:8]}")
