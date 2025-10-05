@@ -500,6 +500,9 @@ async def main():
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
                 )
+                if miner.use_verified_inference:
+                    bt.logging.info(f"---Miner using Verified Inference")
+
                 start_time = time.time()
                 miner.total_request_in_interval = 0
 
