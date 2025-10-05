@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+from typing import Dict, Optional, Union
 import pydantic
 import bittensor as bt
 from pydantic import BaseModel
@@ -72,4 +73,4 @@ class SignedResponse(BaseModel):
 
 class MinerResponse(BaseModel):
     results: str
-    signed_response: SignedResponse
+    signed_response: Optional[Union[Dict, SignedResponse]] = None

@@ -196,7 +196,7 @@ def reward(
             bt.logging.error(f"{response.axon.hotkey[:8]} response time verification failed")
             return 0.0
         if not verify_response_signature(response):
-            bt.logging.error(f"{response.axon.hotkey[:8]} signature verification")
+            bt.logging.error(f"{response.axon.hotkey[:8]} signature verification failed")
             return 0.0
         if not response.miner_uid or not response.miner_hotkey:
             bt.logging.error(f"{response.axon.hotkey[:8]} is not reporting correctly (missing ids)")
@@ -272,10 +272,10 @@ def reward(
             verified = verify_proof(signed_response, verified_public_key)
             if not verified:
                 score = BASE_REWARD / 8
-                bt.logging.error(f"{response.miner_uid} Verified Failed: {response.miner_hotkey[:8]}")
+                bt.logging.error(f"{response.axon.hotkey[:8]} Verified Inference Failed: {response.miner_uid}")
             else:
                 score *= VERFIED_BONUS_MULTIPLIER
-                bt.logging.trace(f"\033[32m{response.miner_uid} Verified Success: {response.miner_hotkey[:8]}\033[0m")
+                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]} Verified Inference Success: {response.miner_uid}\033[0m")
 
         return score
     except Exception as e:
