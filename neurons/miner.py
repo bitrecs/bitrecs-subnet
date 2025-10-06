@@ -229,7 +229,7 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
         finally:
             et = time.time()
-            bt.logging.info(f"{self.model} Query - Elapsed Time: \033[1;32m {et-st} \033[0m")
+            bt.logging.info(f"\033[1;32m{self.model}\033[0m Elapsed Time:\033[1;32m {et-st} \033[0m")
       
         #Do some cleanup - schema is validated in the reward function
         final_results = []
@@ -287,8 +287,8 @@ class Miner(BaseMinerNeuron):
         output_synapse.miner_signature = signature.hex()
 
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
-        if miner_response.signed_response:
-            bt.logging.info(f"\033[32mMINER {self.uid} VERIFIED INFERNCE -> {miner_response.signed_response['signature']}\033[0m")
+        if miner_response.signed_response and self.use_verified_inference and output_synapse.verified_proof:
+            bt.logging.info(f"\033[32mMINER {self.uid} VERIFIED INFERNCE -> {output_synapse.verified_proof['signature']}\033[0m")
         self.total_request_in_interval += 1
         return output_synapse
     
