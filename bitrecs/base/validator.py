@@ -17,11 +17,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-import json
 import os
 import copy
 import time
-import httpx
 import wandb
 import anyio
 import asyncio
@@ -69,7 +67,6 @@ from bitrecs.utils.logging import (
 )
 from bitrecs.utils.wandb import WandbHelper
 from bitrecs.commerce.user_action import UserAction
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 original_trace = bt.logging.trace
 def filtered_trace(message, *args, **kwargs):
@@ -258,7 +255,8 @@ class BaseValidatorNeuron(BaseNeuron):
             self.tempo_batches = [
                 all_miners[i:i+batch_size]
                 for i in range(0, len(all_miners), batch_size)
-            ]
+            ]            
+            safe_random.shuffle(self.tempo_batches)
             self.tempo_batch_index = 0
             self.batches_completed = 0
             self.batch_seen_uids = set()
@@ -310,7 +308,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.warning(f"Too few requests to analyze: {len(requests)} on step {self.step}")
             return
         
-        async def get_dynamic_top_n(num_requests: int, min_n: int = 2, max_n: int = 8, min_requests: int = 2, max_requests: int = CONST.QUERY_BATCH_SIZE) -> int:
+        async def get_dynamic_top_n(num_requests: int, min_n: int=2, max_n:int=8, min_requests: int=2, max_requests: int=CONST.QUERY_BATCH_SIZE) -> int:
             if num_requests <= min_requests:
                 return min_n
             if num_requests >= max_requests:

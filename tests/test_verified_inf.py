@@ -50,6 +50,8 @@ def product_20k():
     products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     return products
 
+
+
 @pytest.mark.asyncio
 async def test_openrouter_verified_inf():
     raw_products = product_woo()    
@@ -80,7 +82,7 @@ async def test_openrouter_verified_inf():
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
     #model = "x-ai/grok-4-fast:free"
-    #model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    model = "google/gemini-2.5-flash-lite-preview-09-2025"
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp" timeout
     #model = "meituan/longcat-flash-chat"
@@ -88,7 +90,7 @@ async def test_openrouter_verified_inf():
     #model = "meta-llama/llama-4-maverick"
     #model = "meta-llama/llama-4-scout"
     #model = "qwen/qwen-turbo"
-    model = "amazon/nova-lite-v1"
+    #model = "amazon/nova-lite-v1"
     #model = "z-ai/glm-4.6"
     #model = "moonshotai/kimi-k2-0905"
     provider = LLM.OPEN_ROUTER
@@ -106,7 +108,7 @@ async def test_openrouter_verified_inf():
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
 
-    hotkey = "5ChvSkb7Gfy7pypH5Cxo9QP2DMEJ88kwFnZvnCwESD66KVzD"
+    hotkey = "5ChvSkb7Gfy7pypH5Cxo9QP2DMEJ88kwFnZvnCwESD66KVzD"    
     llm_response = LLMFactory.query_llmv(server=provider,
                                  model=model,
                                  system_prompt="You are a helpful assistant", 
@@ -138,6 +140,50 @@ async def test_openrouter_verified_inf():
         print(f"{sku}: {count}")
         assert count == 1
     assert user_prompt not in skus
+
+
+@pytest.mark.asyncio
+async def test_na_hotkey_rejected_ok():
+    raw_products = product_woo()    
+    #raw_products = product_shopify()
+    products = ProductFactory.dedupe(raw_products)    
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([3, 4, 5])    
+    debug_prompts = False
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs,
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()    
+    print(f"PROMPT SIZE: {len(prompt)}") 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")        
+    
+    model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    #model = "amazon/nova-lite-v1"
+    #model = "z-ai/glm-4.6"
+    #model = "moonshotai/kimi-k2-0905"
+    provider = LLM.OPEN_ROUTER
+    
+    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+    na_hotkey = "invalid_hotkey_1234567890"
+    with pytest.raises(RuntimeError) as e_info:
+        llm_response = LLMFactory.query_llmv(server=provider,
+                                    model=model,
+                                    system_prompt="You are a helpful assistant", 
+                                    temp=0.0, 
+                                    user_prompt=prompt, 
+                                    miner_hotkey=na_hotkey,
+                                    use_verified_inference=True)                
+        
+    print(e_info)
+    print(f"Caught expected exception: {e_info.value}")
+    assert e_info.value is not None
 
 
 async def get_public_key() -> Ed25519PublicKey:

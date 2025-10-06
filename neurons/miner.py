@@ -287,6 +287,8 @@ class Miner(BaseMinerNeuron):
         output_synapse.miner_signature = signature.hex()
 
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
+        if miner_response.signed_response:
+            bt.logging.info(f"\033[32mMINER {self.uid} VERIFIED INFERNCE -> {miner_response.signed_response['signature']}\033[0m")
         self.total_request_in_interval += 1
         return output_synapse
     

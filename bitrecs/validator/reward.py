@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-VERFIED_BONUS_MULTIPLIER = 1.25
+VERFIED_BONUS_MULTIPLIER = 1.15
 SUSPECT_MINER_DECAY = 0.980
 
 
@@ -300,6 +300,7 @@ def get_rewards(
     - r_limit: The rlimit for responses.
     - batch_size: The number of responses in this batch.
     - entity_threshold: The threshold for considering nodes as entities.
+    - verified_public_key: The public key used to verify proofs of inference.
     Returns:
     - np.ndarray: An array of rewards for each response.
     
