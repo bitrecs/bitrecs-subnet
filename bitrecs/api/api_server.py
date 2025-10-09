@@ -47,10 +47,6 @@ class ApiServer:
         self.app.state.limiter = limiter
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         self.hot_key = validator.wallet.hotkey.ss58_address
-
-        # if self.network != "mainnet":
-        #     bt.logging.warning(f"\033[1;33m WARNING - API Server is running in {self.network} mode \033[0m")
-        #     raise ValueError(f"API Server is not supported in {self.network} mode, please use mainnet")
      
         self.proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
         if not self.proxy_url:
@@ -60,8 +56,7 @@ class ApiServer:
         self.bitrecs_api_key = os.environ.get("BITRECS_API_KEY")
         if not self.bitrecs_api_key:
             bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
-            raise Exception("Missing BITRECS_API_KEY")
-            
+            raise Exception("Missing BITRECS_API_KEY")            
         
         async def general_exception_handler(request: Request, exc: Exception):
             bt.logging.error(f"Unhandled exception: {request.url} - {str(exc)}")
@@ -78,8 +73,7 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware("http")(partial(json_only_middleware, self))
         self.app.middleware('http')(partial(api_key_validator, self))
-        self.app.middleware("http")(partial(filter_allowed_ips, self))
-        
+        self.app.middleware("http")(partial(filter_allowed_ips, self))        
         self.app.add_exception_handler(Exception, general_exception_handler)
         
         self.config = Config(
@@ -99,8 +93,7 @@ class ApiServer:
         elif self.network == "testnet":
             self.router.add_api_route("/rec", self.generate_product_rec_testnet, methods=["POST"])
         elif self.network == "mainnet":
-            self.router.add_api_route("/rec", self.generate_product_rec_mainnet, methods=["POST"])
-            #allow validators to bypass whitelist
+            self.router.add_api_route("/rec", self.generate_product_rec_mainnet, methods=["POST"])            
             ignore_whitelist = os.environ.get("VALIDATOR_API_BYPASS_WHITELIST", "0").strip() == "1"
             if ignore_whitelist:
                 self.bypass_whitelist = True
@@ -111,8 +104,7 @@ class ApiServer:
                 if len(self.allowed_ips) == 0:
                     raise ValueError("No allowed IPs configured for mainnet API")
                 bt.logging.info(f"\033[1;32m API Server has {len(self.allowed_ips)} IP whitelist entries \033[0m")
-                bt.logging.info(f"\033[1;32m API Server is enforcing IP whitelist \033[0m")
-            
+                bt.logging.info(f"\033[1;32m API Server is enforcing IP whitelist \033[0m")            
         else:
             raise ValueError(f"Unsupported network: {self.network}")
         self.app.include_router(self.router)
