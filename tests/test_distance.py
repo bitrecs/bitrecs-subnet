@@ -17,7 +17,8 @@ from bitrecs.protocol import BitrecsRequest
 from dataclasses import asdict
 from typing import List, Optional, Set
 from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.validator.reward import validate_result_schema
 from bitrecs.utils.misc import ttl_cache

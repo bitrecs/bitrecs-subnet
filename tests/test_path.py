@@ -1,8 +1,7 @@
 import os
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from bitrecs.utils.constants import ROOT_DIR
 
 

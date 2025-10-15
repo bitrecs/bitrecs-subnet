@@ -12,7 +12,8 @@ from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
 from bitrecs.commerce.product import CatalogProvider, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from dotenv import load_dotenv
 load_dotenv()
@@ -690,7 +691,7 @@ def test_call_openai_route_gpt4_and_gpt5_ok():
 
 
 
-@pytest.mark.skip(reason="skipped")
+#@pytest.mark.skip(reason="skipped")
 def test_latest_openrouter_model():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -719,7 +720,14 @@ def test_latest_openrouter_model():
     #model = "x-ai/grok-code-fast-1"
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
-    model = "x-ai/grok-4-fast:free"    
+    #model = "x-ai/grok-4-fast:free"
+    #model = "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    #model = "deepseek/deepseek-v3.2-exp"
+    #model = "alibaba/tongyi-deepresearch-30b-a3b:free"
+    #model = "nvidia/nemotron-nano-9b-v2:free"
+    model = "openai/gpt-5-nano"
+    #model = "z-ai/glm-4.5-air"
+    #model = "moonshotai/kimi-k2:free"
     
     provider = LLM.OPEN_ROUTER
     
@@ -798,7 +806,7 @@ def test_cerebras():
     assert user_prompt not in skus
 
 
-#@pytest.mark.skip(reason="skipped")
+@pytest.mark.skip(reason="skipped")
 def test_grok():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -851,7 +859,7 @@ def test_grok():
 
 
 
-#@pytest.mark.skip(reason="skipped")
+@pytest.mark.skip(reason="skipped")
 def test_claude():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    
@@ -904,7 +912,7 @@ def test_claude():
 
 
 
-#@pytest.mark.skip(reason="skipped")
+@pytest.mark.skip(reason="skipped")
 def test_groq():
     raw_products = product_woo()      
     products = ProductFactory.dedupe(raw_products)    

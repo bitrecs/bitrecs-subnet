@@ -1,6 +1,9 @@
 import requests
+import bittensor as bt
 from openai import OpenAI
 from openai.types.responses import Response
+from bitrecs.llms.llm_provider import LLM
+from bitrecs.llms.verified_utils import sign_verified_request
 from bitrecs.protocol import MinerResponse, SignedResponse
 from bitrecs.utils import constants as CONST
 
@@ -11,7 +14,7 @@ class ChatGPT:
                 system_prompt="You are a helpful assistant.", 
                 temp=0.0,
                 use_verified_inference: bool = False,
-                miner_hotkey: str = None):
+                miner_wallet: "bt.Wallet" = None):
         
         self.CHATGPT_API_KEY = key
         if not self.CHATGPT_API_KEY:
@@ -20,7 +23,8 @@ class ChatGPT:
         self.system_prompt = system_prompt
         self.temp = temp
         self.use_verified_inference = use_verified_inference
-        self.miner_hotkey = miner_hotkey
+        self.miner_wallet = miner_wallet
+        self.provider = LLM.CHAT_GPT.name
 
 
     def call_chat_gpt(self, prompt) -> str:
@@ -76,9 +80,20 @@ class ChatGPT:
             raise ValueError()
         if not self.use_verified_inference:
             raise ValueError("use_verified_inference must be True for verified inference")
+        if not self.miner_wallet:
+            raise ValueError("miner_wallet is not set for verified inference")
+         
         if "gpt-5" not in self.model.lower():
             return self.call_chat_gpt_verified_legacy(prompt)
         
+        headers = {
+            "Authorization": f"Bearer {self.CHATGPT_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bitrecs.ai",
+            "X-Title": "bitrecs",
+            "x-hotkey": self.miner_wallet.hotkey.ss58_address,
+            "x-provider": self.provider
+        }      
         url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         payload = {
             "model": self.model,
@@ -102,15 +117,11 @@ class ChatGPT:
             "reasoning": {
                 "effort": "low"
             }
-        }        
-        headers = {
-            "Authorization": f"Bearer {self.CHATGPT_API_KEY}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://bitrecs.ai",
-            "X-Title": "bitrecs",
-            "x-hotkey": self.miner_hotkey,
-            "x-provider": "CHAT_GPT"
-        }      
+        }
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        headers["x-signature"] = signature
+        headers["x-nonce"] = nonce
+       
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()

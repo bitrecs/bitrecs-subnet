@@ -6,7 +6,8 @@ from typing import List
 from random import SystemRandom
 safe_random = SystemRandom()
 from dataclasses import asdict
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.commerce.user_profile import UserProfile

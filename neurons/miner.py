@@ -35,7 +35,8 @@ from bitrecs.base.miner import BaseMinerNeuron
 from bitrecs.commerce.user_profile import UserProfile
 from bitrecs.protocol import BitrecsRequest, MinerResponse
 from bitrecs.llms.prompt_factory import PromptFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.utils.runtime import execute_periodically
 from bitrecs.utils.uids import best_uid
 from bitrecs.utils.version import LocalMetadata

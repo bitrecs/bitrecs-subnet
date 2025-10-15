@@ -1,12 +1,12 @@
 import json
 import random
-from typing import List
 from dataclasses import asdict
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.utils.misc import ttl_cache
 from bitrecs.commerce.user_profile import UserProfile
-from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
+from bitrecs.commerce.product import CatalogProvider, ProductFactory
 from dotenv import load_dotenv
 load_dotenv()
 

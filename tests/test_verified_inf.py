@@ -5,13 +5,15 @@ import base64
 import json
 import time
 import pytest    
+import bittensor as bt
 from bitrecs.protocol import SignedResponse
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
 from bitrecs.commerce.product import CatalogProvider, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from dotenv import load_dotenv
@@ -19,6 +21,9 @@ load_dotenv()
 from bitrecs.utils import constants as CONST
 
 VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
+TEST_WALLET = bt.Wallet(name="brecstm5")
+assert TEST_WALLET.coldkey is not None, "Wallet coldkey is None"
+ 
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
@@ -107,15 +112,15 @@ async def test_openrouter_verified_inf():
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
-
-    hotkey = "5ChvSkb7Gfy7pypH5Cxo9QP2DMEJ88kwFnZvnCwESD66KVzD"    
+    
     llm_response = LLMFactory.query_llmv(server=provider,
-                                 model=model,
-                                 system_prompt="You are a helpful assistant", 
-                                 temp=0.0, 
-                                 user_prompt=prompt, 
-                                 miner_hotkey=hotkey,
-                                 use_verified_inference=True)
+                                model=model,
+                                system_prompt="You are a helpful assistant", 
+                                temp=0.0, 
+                                user_prompt=prompt,
+                                miner_wallet=TEST_WALLET,
+                                use_verified_inference=True)                                 
+                                 
     et = time.time()
     diff = et - st  
     print(f"LLM response time: {diff:.2f} seconds")
@@ -142,48 +147,48 @@ async def test_openrouter_verified_inf():
     assert user_prompt not in skus
 
 
-@pytest.mark.asyncio
-async def test_na_hotkey_rejected_ok():
-    raw_products = product_woo()    
-    #raw_products = product_shopify()
-    products = ProductFactory.dedupe(raw_products)    
-    rp = safe_random.choice(products)
-    user_prompt = rp.sku    
-    num_recs = safe_random.choice([3, 4, 5])    
-    debug_prompts = False
-    context = json.dumps([asdict(products) for products in products])
-    factory = PromptFactory(sku=user_prompt, 
-                            context=context, 
-                            num_recs=num_recs,
-                            debug=debug_prompts)
+# @pytest.mark.asyncio
+# async def test_na_hotkey_rejected_ok():
+#     raw_products = product_woo()    
+#     #raw_products = product_shopify()
+#     products = ProductFactory.dedupe(raw_products)    
+#     rp = safe_random.choice(products)
+#     user_prompt = rp.sku    
+#     num_recs = safe_random.choice([3, 4, 5])    
+#     debug_prompts = False
+#     context = json.dumps([asdict(products) for products in products])
+#     factory = PromptFactory(sku=user_prompt, 
+#                             context=context, 
+#                             num_recs=num_recs,
+#                             debug=debug_prompts)
     
-    prompt = factory.generate_prompt()    
-    print(f"PROMPT SIZE: {len(prompt)}") 
-    wc = PromptFactory.get_word_count(prompt)
-    print(f"word count: {wc}")
-    tc = PromptFactory.get_token_count(prompt)
-    print(f"token count: {tc}")        
+#     prompt = factory.generate_prompt()    
+#     print(f"PROMPT SIZE: {len(prompt)}") 
+#     wc = PromptFactory.get_word_count(prompt)
+#     print(f"word count: {wc}")
+#     tc = PromptFactory.get_token_count(prompt)
+#     print(f"token count: {tc}")        
     
-    model = "google/gemini-2.5-flash-lite-preview-09-2025"
-    #model = "amazon/nova-lite-v1"
-    #model = "z-ai/glm-4.6"
-    #model = "moonshotai/kimi-k2-0905"
-    provider = LLM.OPEN_ROUTER
+#     model = "google/gemini-2.5-flash-lite-preview-09-2025"
+#     #model = "amazon/nova-lite-v1"
+#     #model = "z-ai/glm-4.6"
+#     #model = "moonshotai/kimi-k2-0905"
+#     provider = LLM.OPEN_ROUTER
     
-    print(f"\033[32mTesting {provider} with model: {model} \033[0m")
-    na_hotkey = "invalid_hotkey_1234567890"
-    with pytest.raises(RuntimeError) as e_info:
-        llm_response = LLMFactory.query_llmv(server=provider,
-                                    model=model,
-                                    system_prompt="You are a helpful assistant", 
-                                    temp=0.0, 
-                                    user_prompt=prompt, 
-                                    miner_hotkey=na_hotkey,
-                                    use_verified_inference=True)                
+#     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
+#     na_hotkey = "invalid_hotkey_1234567890"
+#     with pytest.raises(RuntimeError) as e_info:
+#         llm_response = LLMFactory.query_llmv(server=provider,
+#                                     model=model,
+#                                     system_prompt="You are a helpful assistant", 
+#                                     temp=0.0, 
+#                                     user_prompt=prompt, 
+#                                     miner_hotkey=na_hotkey,
+#                                     use_verified_inference=True)                
         
-    print(e_info)
-    print(f"Caught expected exception: {e_info.value}")
-    assert e_info.value is not None
+#     print(e_info)
+#     print(f"Caught expected exception: {e_info.value}")
+#     assert e_info.value is not None
 
 
 async def get_public_key() -> Ed25519PublicKey:

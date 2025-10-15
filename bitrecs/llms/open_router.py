@@ -1,6 +1,10 @@
 import json
+import secrets
+import time
 import requests
-from openai import OpenAI
+import bittensor as bt
+from bitrecs.llms.llm_provider import LLM
+from bitrecs.llms.verified_utils import sign_verified_request
 from bitrecs.protocol import MinerResponse, SignedResponse
 from bitrecs.utils import constants as CONST
 
@@ -11,7 +15,7 @@ class OpenRouter:
                  system_prompt="You are a helpful assistant.", 
                  temp=0.0,
                  use_verified_inference: bool = False,
-                 miner_hotkey: str = None,
+                 miner_wallet: "bt.Wallet" = None
         ):
 
         self.OPENROUTER_API_KEY = key
@@ -21,7 +25,8 @@ class OpenRouter:
         self.system_prompt = system_prompt
         self.temp = temp
         self.use_verified_inference = use_verified_inference
-        self.miner_hotkey = miner_hotkey
+        self.miner_wallet = miner_wallet
+        self.provider = LLM.OPEN_ROUTER.name
 
     def call_open_router(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
@@ -83,17 +88,20 @@ class OpenRouter:
     def call_open_router_verified(self, prompt) -> MinerResponse:       
         if not prompt or len(prompt) < 10:
                 raise ValueError()
+        if not self.use_verified_inference:
+            raise ValueError("use_verified_inference is False")
+        if not self.miner_wallet:
+            raise ValueError("miner_wallet is not set for verified inference")
         
         headers = {
             "Authorization": f"Bearer {self.OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://bitrecs.ai",
-            "X-Title": "bitrecs"
+            "x-title": "bitrecs",
+            "x-hotkey": self.miner_wallet.hotkey.ss58_address,
+            "x-provider": self.provider
         }
         url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
-        headers["x-hotkey"] = self.miner_hotkey
-        headers["x-provider"] = "OPEN_ROUTER"
-      
         reasoning = {
             "enabled": False,
             "exclude": True,
@@ -120,7 +128,10 @@ class OpenRouter:
             # "thinking": {
             #     "type": "disabled"
             # },
-        }
+        }                
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        headers["x-signature"] = signature
+        headers["x-nonce"] = nonce
         
         timeout = (5, 30) #connect, read timeout
         try:

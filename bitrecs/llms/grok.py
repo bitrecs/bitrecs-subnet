@@ -1,5 +1,9 @@
-from openai import OpenAI
+
 import requests
+import bittensor as bt
+from openai import OpenAI
+from bitrecs.llms.llm_provider import LLM
+from bitrecs.llms.verified_utils import sign_verified_request
 from bitrecs.utils import constants as CONST
 from bitrecs.protocol import MinerResponse, SignedResponse
 
@@ -8,9 +12,9 @@ class Grok:
                 key, 
                 model="grok-4-fast-non-reasoning", 
                 system_prompt="You are a helpful assistant.", 
-                temp=0.0,
-                miner_hotkey: str = None,
-                use_verified_inference: bool = False):
+                temp=0.0,                
+                use_verified_inference: bool = False,
+                miner_wallet: "bt.Wallet" = None):
         
         self.GROK_API_KEY = key
         if not self.GROK_API_KEY:
@@ -18,8 +22,9 @@ class Grok:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp        
-        self.miner_hotkey = miner_hotkey
+        self.miner_wallet = miner_wallet
         self.use_verified_inference = use_verified_inference
+        self.provider = LLM.GROK.name
         
 
     def call_grok(self, prompt) -> str:
@@ -52,8 +57,18 @@ class Grok:
             raise ValueError()
         if not self.use_verified_inference:
             raise ValueError("use_verified_inference must be True for verified inference")
-             
-        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"        
+        if not self.miner_wallet:
+            raise ValueError("miner_wallet is not set for verified inference")
+        
+        headers = {
+            "Authorization": f"Bearer {self.GROK_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://bitrecs.ai",
+            "X-Title": "bitrecs",
+            "x-hotkey": self.miner_wallet.hotkey.ss58_address,
+            "x-provider": self.provider
+        }
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         payload = {
             "model": self.model,
             "messages": [
@@ -70,14 +85,10 @@ class Grok:
             "max_tokens": 2048,
             "stream": False
         }        
-        headers = {
-            "Authorization": f"Bearer {self.GROK_API_KEY}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://bitrecs.ai",
-            "X-Title": "bitrecs",
-            "x-hotkey": self.miner_hotkey,
-            "x-provider": "GROK"
-        }      
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        headers["x-signature"] = signature
+        headers["x-nonce"] = nonce
+       
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()

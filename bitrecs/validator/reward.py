@@ -267,7 +267,7 @@ def reward(
             signed_response = SignedResponse(**response.verified_proof)
             verified = verify_proof(signed_response, verified_public_key)
             if not verified:
-                score = BASE_REWARD / 8
+                score = 0.0
                 bt.logging.error(f"{response.axon.hotkey[:8]} Verified Inference Failed: {response.miner_uid}")
             else:
                 score *= VERFIED_BONUS_MULTIPLIER

@@ -7,7 +7,8 @@ import numpy as np
 import bittensor as bt
 from typing import Dict, Any, Optional, List, Set
 from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.utils.distance import (    

@@ -7,7 +7,8 @@ from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
 from bitrecs.commerce.product import CatalogProvider, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from tests.utils import write_prompt_to_file
 from dotenv import load_dotenv

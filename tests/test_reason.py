@@ -8,9 +8,10 @@ safe_random = SystemRandom()
 from datetime import datetime
 from bitrecs.protocol import BitrecsRequest
 from dataclasses import asdict
-from typing import List, Optional, Set
+from typing import List, Optional
 from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
-from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.llms.factory import LLMFactory
+from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.utils.misc import ttl_cache
 from dotenv import load_dotenv
