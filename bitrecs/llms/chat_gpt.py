@@ -168,15 +168,18 @@ class ChatGPT:
             ],
             "temperature": self.temp,
             "max_tokens": 2048
-        }        
+        }
         headers = {
             "Authorization": f"Bearer {self.CHATGPT_API_KEY}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://bitrecs.ai",
             "X-Title": "bitrecs",
-            "x-hotkey": self.miner_hotkey,
-            "x-provider": "CHAT_GPT"
-        }      
+            "x-hotkey": self.miner_wallet.hotkey.ss58_address,
+            "x-provider": self.provider
+        }       
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        headers["x-signature"] = signature
+        headers["x-nonce"] = nonce
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()

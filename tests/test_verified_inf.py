@@ -22,7 +22,6 @@ from bitrecs.utils import constants as CONST
 
 VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
 TEST_WALLET = bt.Wallet(name="brecstm5")
-assert TEST_WALLET.coldkey is not None, "Wallet coldkey is None"
  
 
 def product_woo():
@@ -87,7 +86,7 @@ async def test_openrouter_verified_inf():
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
     #model = "x-ai/grok-4-fast:free"
-    model = "google/gemini-2.5-flash-lite-preview-09-2025"
+    #model = "google/gemini-2.5-flash-lite-preview-09-2025"
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp" timeout
     #model = "meituan/longcat-flash-chat"
@@ -98,7 +97,7 @@ async def test_openrouter_verified_inf():
     #model = "amazon/nova-lite-v1"
     #model = "z-ai/glm-4.6"
     #model = "moonshotai/kimi-k2-0905"
-    provider = LLM.OPEN_ROUTER
+    #provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
     #model = "gpt-5-nano"
@@ -109,6 +108,9 @@ async def test_openrouter_verified_inf():
 
     #model = "grok-4-fast-non-reasoning"
     #provider = LLM.GROK
+    
+    model = "claude-haiku-4-5-20251001"
+    provider = LLM.CLAUDE
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()

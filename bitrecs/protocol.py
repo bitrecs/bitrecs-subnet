@@ -16,11 +16,11 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-
-from typing import Dict, Optional, Union
 import pydantic
 import bittensor as bt
 from pydantic import BaseModel
+from typing import Dict, Optional, Union
+
 
 class BitrecsRequest(bt.Synapse):
     created_at: str | None
@@ -42,7 +42,7 @@ class BitrecsRequest(bt.Synapse):
     )
     verified_proof: dict | None = pydantic.Field(
         None,
-        description="Proof of the verified inference (if applicable)",
+        description="Proof of verified inference (if applicable)",
     )
     
 

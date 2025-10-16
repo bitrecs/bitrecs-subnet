@@ -81,7 +81,7 @@ class LLMFactory:
             case LLM.GROK:
                 return GrokInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
             case LLM.CLAUDE:
-                raise NotImplementedError("Claude is not implemented yet")
+                return ClaudeInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)                
             case LLM.CEREBRAS:
                 raise NotImplementedError("Cerebras is not implemented yet")
             case LLM.GROQ:
@@ -250,22 +250,29 @@ class GrokInterface:
 
 
 class ClaudeInterface:
-    def __init__(self, model, system_prompt, temp, miner_hotkey = None, use_verified_inference = False):
+    def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
         self.CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY")
         if not self.CLAUDE_API_KEY:            
             raise ValueError("CLAUDE_API_KEY is not set")
-        self.miner_hotkey = miner_hotkey
+        self.miner_wallet = miner_wallet
         self.use_verified_inference = use_verified_inference
         
     def query(self, user_prompt) -> str:
         router = Claude(self.CLAUDE_API_KEY, model=self.model, 
                          system_prompt=self.system_prompt, temp=self.temp, 
-                         miner_hotkey=self.miner_hotkey, 
+                         miner_wallet=self.miner_wallet, 
                          use_verified_inference=self.use_verified_inference)
         return router.call_claude(user_prompt)
+    
+    def query_verified(self, user_prompt) -> MinerResponse:
+        router = Claude(self.CLAUDE_API_KEY, model=self.model,
+                    system_prompt=self.system_prompt, temp=self.temp, 
+                    miner_wallet=self.miner_wallet, 
+                    use_verified_inference=self.use_verified_inference)
+        return router.call_claude_verified(user_prompt)
 
 
 class GroqInterface:

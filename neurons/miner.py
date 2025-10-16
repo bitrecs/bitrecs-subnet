@@ -49,9 +49,9 @@ async def do_work(user_prompt: str,
                   model: str,
                   system_prompt="You are a helpful assistant.", 
                   profile : UserProfile = None,
-                  debug_prompts=False,
-                  use_verified=False,
-                  miner_hotkey=None) -> Optional[MinerResponse]:
+                  debug_prompts: bool = False,
+                  use_verified: bool = False,
+                  miner_wallet: "bt.Wallet" = None) -> Optional[MinerResponse]:
     """
     Miner work is done here.
     This function is invoked by the validator Forward function to generate product recommendations based on the user prompt and context.    
@@ -72,7 +72,7 @@ async def do_work(user_prompt: str,
         profile (UserProfile): The user profile to use when generating recommendations.
         debug_prompts (bool): Whether to log debug information about the prompts.
         use_verified (bool): Whether to use verified inference.
-        miner_hotkey (str): The miner's hotkey to sign the verified inference proof (if applicable).
+        miner_wallet (str): The miner's wallet to sign the verified inference proof (if applicable).
 
     Returns:
         MinerResponse: The response from the LLM containing the recommendations and signed proof (if applicable).        
@@ -105,7 +105,7 @@ async def do_work(user_prompt: str,
                                                 system_prompt=system_prompt, 
                                                 temp=0.0,
                                                 user_prompt=prompt,
-                                                miner_hotkey=miner_hotkey,
+                                                miner_wallet=miner_wallet,
                                                 use_verified_inference=True)
 
         if not miner_response or len(miner_response.results) < 10:
@@ -214,14 +214,14 @@ class Miner(BaseMinerNeuron):
         miner_response : MinerResponse = None
         try:            
             miner_response = await do_work(user_prompt=query,
-                                    context=context, 
-                                    num_recs=num_recs, 
-                                    server=server, 
-                                    model=model, 
+                                    context=context,
+                                    num_recs=num_recs,
+                                    server=server,
+                                    model=model,
                                     profile=user_profile,
                                     debug_prompts=debug_prompts,
                                     use_verified=self.use_verified_inference,
-                                    miner_hotkey=self.wallet.hotkey.ss58_address)
+                                    miner_wallet=self.wallet)
             if not miner_response:
                 bt.logging.error("LLM response is empty.")
                 raise ValueError("LLM response is empty.")
