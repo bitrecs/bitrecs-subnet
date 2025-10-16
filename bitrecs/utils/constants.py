@@ -40,6 +40,9 @@ Constants:
     EMISSION_CONTROL_ENABLED (bool): Flag to enable emission control.  
     EMISSION_CONTROL_RATE (float): Rate for emission control adjustments.
     EMISSION_CONTROL_TARGET_UID (int): Target UID for emission control.
+    VERIFIED_INFERENCE_URL (str): URL for verified inference service.
+    TRUNCATE_LOGS_ENABLED (bool): Flag to enable log truncation.
+    TRUNCATE_LOGS_DB_DAYS (int): Number of days to retain log database entries
 
 """
 
@@ -79,3 +82,5 @@ EMISSION_CONTROL_ENABLED = True
 EMISSION_CONTROL_RATE = 0.95
 EMISSION_CONTROL_TARGET_UID = 0
 VERIFIED_INFERENCE_URL = "https://verified.bitrecs.ai"
+TRUNCATE_LOGS_ENABLED = False
+TRUNCATE_LOGS_DB_DAYS = 60

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.constants import SCHEMA_UPDATE_CUTOFF
+from bitrecs.utils.constants import SCHEMA_UPDATE_CUTOFF, TRUNCATE_LOGS_DB_DAYS, TRUNCATE_LOGS_ENABLED
 
 EVENTS_LEVEL_NUM = 38
 DEFAULT_LOG_BACKUP_COUNT = 10
@@ -110,12 +110,10 @@ def read_timestamp():
 def update_table_schema(conn: sqlite3.Connection, required_columns: list) -> None:
     """Update table schema to include any missing columns before cutoff date."""
     if datetime.now(timezone.utc) > SCHEMA_UPDATE_CUTOFF:
-        return        
-    cursor = conn.cursor()
-    # Get existing columns
+        return
+    cursor = conn.cursor()    
     cursor.execute("PRAGMA table_info(miner_responses)")
-    existing_columns = {row[1] for row in cursor.fetchall()}    
-    # Add any missing columns
+    existing_columns = {row[1] for row in cursor.fetchall()}
     for col in required_columns:
         if col not in existing_columns:
             bt.logging.info(f"Adding missing column: {col}")
@@ -124,8 +122,32 @@ def update_table_schema(conn: sqlite3.Connection, required_columns: list) -> Non
     conn.commit()
 
 
-def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewards: np.ndarray, elected: BitrecsRequest) -> None:
+def truncate_miner_log_db(since_date: datetime) -> int:
+    """Truncate miner log database to remove entries older than since_date."""
+    db_path = os.path.join(os.getcwd(), 'miner_responses.db')
+    if not os.path.exists(db_path):
+        bt.logging.error("No miner_responses.db found to truncate")
+        return 0
     try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cutoff_str = since_date.strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("DELETE FROM miner_responses WHERE created_at < ?", (cutoff_str,))
+        deleted_rows = cursor.rowcount
+        conn.commit()
+        conn.close()
+        bt.logging.trace(f"Truncated {deleted_rows} rows older than {cutoff_str} from miner_responses.db")
+        return deleted_rows
+    except sqlite3.Error as e:
+        bt.logging.error(f"SQLite error during truncation: {e}")
+        return 0
+
+
+def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewards: np.ndarray, elected: BitrecsRequest) -> None:
+    try:        
+        if TRUNCATE_LOGS_ENABLED:
+            deleted = truncate_miner_log_db(datetime.now(timezone.utc) - pd.Timedelta(days=TRUNCATE_LOGS_DB_DAYS))
+            bt.logging.trace(f"Truncated {deleted} old rows from miner log database.")
         frames = []
         for response in responses:
             if not isinstance(response, BitrecsRequest):

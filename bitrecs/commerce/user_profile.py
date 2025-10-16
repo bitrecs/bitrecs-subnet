@@ -40,7 +40,7 @@ class UserProfile:
                 bt.logging.warning(f"Unsupported profile type: {type(profile)}")
                 return None
         except Exception as e:
-            bt.logging.error(f"tryparse_profile Exception: {e}")
+            bt.logging.warning(f"tryparse_profile Exception: {e}")
             return None
 
 

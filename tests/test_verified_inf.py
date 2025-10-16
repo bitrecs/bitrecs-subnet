@@ -103,8 +103,8 @@ async def test_openrouter_verified_inf():
     #model = "gpt-5-nano"
     #provider = LLM.CHAT_GPT
 
-    #model = "gemini-2.5-flash-lite-preview-09-2025"
-    #provider = LLM.GEMINI
+    model = "gemini-2.5-flash-lite-preview-09-2025"
+    provider = LLM.GEMINI
 
     #model = "grok-4-fast-non-reasoning"
     #provider = LLM.GROK
@@ -113,8 +113,8 @@ async def test_openrouter_verified_inf():
     #provider = LLM.CLAUDE
 
     #model = "zai-org/GLM-4.5-Air"
-    model = "Qwen/Qwen3-235B-A22B-Instruct-2507"
-    provider = LLM.CHUTES
+    #model = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+    #provider = LLM.CHUTES
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
