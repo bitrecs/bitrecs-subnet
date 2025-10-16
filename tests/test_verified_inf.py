@@ -109,8 +109,12 @@ async def test_openrouter_verified_inf():
     #model = "grok-4-fast-non-reasoning"
     #provider = LLM.GROK
     
-    model = "claude-haiku-4-5-20251001"
-    provider = LLM.CLAUDE
+    #model = "claude-haiku-4-5-20251001"
+    #provider = LLM.CLAUDE
+
+    #model = "zai-org/GLM-4.5-Air"
+    model = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+    provider = LLM.CHUTES
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()

@@ -1,6 +1,5 @@
 import os
 import bittensor as bt
-
 from bitrecs.llms.cerebras import Cerebras
 from bitrecs.llms.claude import Claude
 from bitrecs.llms.gemini import Gemini
@@ -13,20 +12,6 @@ from bitrecs.llms.vllm_router import vLLM
 from bitrecs.llms.chutes import Chutes
 from bitrecs.llms.grok import Grok
 from bitrecs.protocol import MinerResponse
-
-
-# class LLM(Enum):
-#     OLLAMA_LOCAL = 1
-#     OPEN_ROUTER = 2
-#     CHAT_GPT = 3
-#     VLLM = 4
-#     GEMINI = 5
-#     GROK = 6
-#     CLAUDE = 7
-#     CHUTES = 8
-#     CEREBRAS = 9
-#     GROQ = 10
-
 
 
 class LLMFactory:
@@ -63,21 +48,23 @@ class LLMFactory:
     @staticmethod
     def query_llmv(server: LLM, model: str, 
                   system_prompt="You are a helpful assistant", 
-                  temp=0.0, user_prompt="", miner_wallet: "bt.Wallet" = None, use_verified_inference=False) -> MinerResponse:
+                  temp=0.0, user_prompt="", 
+                  miner_wallet: "bt.Wallet" = None, 
+                  use_verified_inference=False) -> MinerResponse:
         """Verified inference"""
         match server:
             case LLM.OLLAMA_LOCAL:
                 raise NotImplementedError("Ollama Local does not support verified inference")
+            case LLM.VLLM:
+                raise NotImplementedError("VLLM does not support verified inference")
             case LLM.OPEN_ROUTER:
                 return OpenRouterInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
             case LLM.CHAT_GPT:
-                return ChatGPTInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
-            case LLM.VLLM:
-                raise NotImplementedError("VLLM does not support verified inference")
+                return ChatGPTInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)          
             case LLM.GEMINI:
                 return GeminiInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)         
             case LLM.CHUTES:                
-                raise NotImplementedError("Chutes does not support verified inference")
+                return ChutesInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
             case LLM.GROK:
                 return GrokInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
             case LLM.CLAUDE:
@@ -113,8 +100,7 @@ class LLMFactory:
             case "CEREBRAS":
                 return LLM.CEREBRAS
             case "GROQ":
-                return LLM.GROQ
-                
+                return LLM.GROQ                
             case _:
                 raise ValueError("Unknown LLM server")
         
@@ -154,8 +140,7 @@ class OpenRouterInterface:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model,
                             system_prompt=self.system_prompt, temp=self.temp, miner_wallet=self.miner_wallet,
                             use_verified_inference=self.use_verified_inference)
-        return router.call_open_router_verified(user_prompt)
-   
+        return router.call_open_router_verified(user_prompt)  
     
     
 class ChatGPTInterface:
@@ -222,7 +207,6 @@ class GeminiInterface:
                          use_verified_inference=self.use_verified_inference)
         return router.call_gemini_verified(user_prompt)
     
-
     
 class GrokInterface:
     def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
@@ -247,7 +231,6 @@ class GrokInterface:
                     use_verified_inference=self.use_verified_inference)
         return router.call_grok_verified(user_prompt)
     
-
 
 class ClaudeInterface:
     def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
@@ -275,39 +258,28 @@ class ClaudeInterface:
         return router.call_claude_verified(user_prompt)
 
 
-class GroqInterface:
-    def __init__(self, model, system_prompt, temp, miner_hotkey = None, use_verified_inference = False):
-        self.model = model
-        self.system_prompt = system_prompt
-        self.temp = temp
-        self.GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-        if not self.GROQ_API_KEY:            
-            raise ValueError("GROQ_API_KEY is not set")
-        self.miner_hotkey = miner_hotkey
-        self.use_verified_inference = use_verified_inference
-        
-    def query(self, user_prompt) -> str:
-        router = Groq(self.GROQ_API_KEY, model=self.model, 
-                         system_prompt=self.system_prompt, temp=self.temp, 
-                         miner_hotkey=self.miner_hotkey, 
-                         use_verified_inference=self.use_verified_inference)
-        return router.call_groq(user_prompt)
-
-
-
 class ChutesInterface:
-    def __init__(self, model, system_prompt, temp):
+    def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
         self.CHUTES_API_KEY = os.environ.get("CHUTES_API_KEY")
         if not self.CHUTES_API_KEY:            
             raise ValueError("CHUTES_API_KEY is not set")
+        self.miner_wallet = miner_wallet
+        self.use_verified_inference = use_verified_inference
         
     def query(self, user_prompt) -> str:
         router = Chutes(self.CHUTES_API_KEY, model=self.model, 
                          system_prompt=self.system_prompt, temp=self.temp)        
         return router.call_chutes(user_prompt)
+
+    def query_verified(self, user_prompt) -> MinerResponse:
+        router = Chutes(self.CHUTES_API_KEY, model=self.model,
+                    system_prompt=self.system_prompt, temp=self.temp, 
+                    miner_wallet=self.miner_wallet, 
+                    use_verified_inference=self.use_verified_inference)
+        return router.call_chutes_verified(user_prompt)
     
 
 class CerebrasInterface:
@@ -327,3 +299,22 @@ class CerebrasInterface:
                          miner_hotkey=self.miner_hotkey, 
                          use_verified_inference=self.use_verified_inference)
         return router.call_cerebras(user_prompt)
+    
+
+class GroqInterface:
+    def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
+        self.GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+        if not self.GROQ_API_KEY:            
+            raise ValueError("GROQ_API_KEY is not set")
+        self.miner_wallet = miner_wallet
+        self.use_verified_inference = use_verified_inference
+        
+    def query(self, user_prompt) -> str:
+        router = Groq(self.GROQ_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp, 
+                         miner_wallet=self.miner_wallet, 
+                         use_verified_inference=self.use_verified_inference)
+        return router.call_groq(user_prompt)
