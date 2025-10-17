@@ -135,6 +135,10 @@ def truncate_miner_log_db(since_date: datetime) -> int:
         cursor.execute("DELETE FROM miner_responses WHERE created_at < ?", (cutoff_str,))
         deleted_rows = cursor.rowcount
         conn.commit()
+        if deleted_rows > 1000:
+            bt.logging.trace("Running VACUUM on miner_responses.db to reclaim space")
+            cursor.execute("VACUUM")
+            conn.commit()        
         conn.close()
         bt.logging.trace(f"Truncated {deleted_rows} rows older than {cutoff_str} from miner_responses.db")
         return deleted_rows
