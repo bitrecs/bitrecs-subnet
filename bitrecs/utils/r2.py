@@ -116,7 +116,7 @@ def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
             signed_url, 
             data=file_data,
             headers=headers,
-            timeout=300
+            timeout=900
         )
         
         if response.status_code in (200, 201):

@@ -1,4 +1,4 @@
-
+import time
 import requests
 import bittensor as bt
 from openai import OpenAI
@@ -84,10 +84,12 @@ class Grok:
             "temperature": self.temp,
             "max_tokens": 2048,
             "stream": False
-        }        
-        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        }
+        ts = int(time.time())
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
+        headers["x-timestamp"] = ts
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()

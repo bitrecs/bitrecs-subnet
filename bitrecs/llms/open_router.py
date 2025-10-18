@@ -1,5 +1,5 @@
+import time
 import json
-import secrets
 import time
 import requests
 import bittensor as bt
@@ -7,6 +7,7 @@ from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.verified_utils import sign_verified_request
 from bitrecs.protocol import MinerResponse, SignedResponse
 from bitrecs.utils import constants as CONST
+
 
 class OpenRouter:    
     def __init__(self, 
@@ -128,10 +129,12 @@ class OpenRouter:
             # "thinking": {
             #     "type": "disabled"
             # },
-        }                
-        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        }
+        ts = int(time.time())
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
+        headers["x-timestamp"] = ts
         
         timeout = (5, 30) #connect, read timeout
         try:

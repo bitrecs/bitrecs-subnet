@@ -1,3 +1,4 @@
+import time
 import requests
 import bittensor as bt
 from openai import OpenAI
@@ -118,9 +119,11 @@ class ChatGPT:
                 "effort": "low"
             }
         }
-        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        ts = int(time.time())
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
+        headers["x-timestamp"] = ts
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
@@ -176,14 +179,16 @@ class ChatGPT:
             "X-Title": "bitrecs",
             "x-hotkey": self.miner_wallet.hotkey.ss58_address,
             "x-provider": self.provider
-        }       
-        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        }
+        ts = int(time.time())
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
+        headers["x-timestamp"] = str(ts)
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
-        results = data["response"]["choices"][0]["message"]["content"]        
+        results = data["response"]["choices"][0]["message"]["content"]
         proof = data["proof"]
         signature = data["signature"]
         timestamp = data["timestamp"]

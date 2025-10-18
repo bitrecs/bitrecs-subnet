@@ -1,6 +1,7 @@
+import time
+import requests
 import bittensor as bt
 from openai import OpenAI
-import requests
 from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.verified_utils import sign_verified_request
 from bitrecs.utils import constants as CONST
@@ -69,6 +70,7 @@ class Claude:
             "x-provider": self.provider,
             "anthropic-version" : "2023-06-01"
         }
+        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
         payload = {
             "model": self.model,
             "messages": [
@@ -84,12 +86,12 @@ class Claude:
             "temperature": self.temp,
             "max_tokens": 2048,
             "stream": False
-        }        
-        
-        url = f"{CONST.VERIFIED_INFERENCE_URL}/v1/chat/completions"
-        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload)        
+        }
+        ts = int(time.time())
+        signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
+        headers["x-timestamp"] = ts
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
