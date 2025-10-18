@@ -119,11 +119,11 @@ class ChatGPT:
                 "effort": "low"
             }
         }
-        ts = int(time.time())
+        ts = str(int(time.time()))
         signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
-        headers["x-timestamp"] = str(ts)
+        headers["x-timestamp"] = ts
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
@@ -180,11 +180,11 @@ class ChatGPT:
             "x-hotkey": self.miner_wallet.hotkey.ss58_address,
             "x-provider": self.provider
         }
-        ts = int(time.time())
+        ts = str(int(time.time()))
         signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
-        headers["x-timestamp"] = str(ts)
+        headers["x-timestamp"] = ts
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()

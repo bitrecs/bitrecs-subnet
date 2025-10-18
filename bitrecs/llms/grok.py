@@ -85,11 +85,11 @@ class Grok:
             "max_tokens": 2048,
             "stream": False
         }
-        ts = int(time.time())
+        ts = str(int(time.time()))
         signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
-        headers["x-timestamp"] = str(ts)
+        headers["x-timestamp"] = ts
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
