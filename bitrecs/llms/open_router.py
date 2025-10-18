@@ -134,7 +134,7 @@ class OpenRouter:
         signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
-        headers["x-timestamp"] = ts
+        headers["x-timestamp"] = str(ts)
         
         timeout = (5, 30) #connect, read timeout
         try:

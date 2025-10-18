@@ -91,7 +91,7 @@ class Claude:
         signature, nonce = sign_verified_request(self.miner_wallet, self.provider, payload, ts)
         headers["x-signature"] = signature
         headers["x-nonce"] = nonce
-        headers["x-timestamp"] = ts
+        headers["x-timestamp"] = str(ts)
        
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
