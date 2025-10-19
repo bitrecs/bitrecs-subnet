@@ -19,9 +19,10 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from dotenv import load_dotenv
 load_dotenv()
 from bitrecs.utils import constants as CONST
+from bitrecs.validator.reward import verify_proof
 
 VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
-TEST_WALLET = bt.Wallet(name="brecstm5")
+TEST_WALLET = bt.Wallet(name=os.getenv("TEST_WALLET_NAME", "test_wallet_1"))
  
 
 def product_woo():
@@ -86,6 +87,7 @@ async def test_openrouter_verified_inf():
     #model = "ai21/jamba-mini-1.7"    
     #model = "qwen/qwen3-next-80b-a3b-instruct"
     #model = "x-ai/grok-4-fast:free"
+    #model = "x-ai/grok-4-fast"
     #model = "google/gemini-2.5-flash-lite-preview-09-2025"
     #model = "anthropic/claude-3-haiku"  #claude-3-haiku-20240307
     #model = "deepseek/deepseek-v3.2-exp" timeout
@@ -97,6 +99,9 @@ async def test_openrouter_verified_inf():
     #model = "amazon/nova-lite-v1"
     #model = "z-ai/glm-4.6"
     #model = "moonshotai/kimi-k2-0905"
+    #model = "inclusionai/ling-1t" #timeout
+    #model = "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    #model = "qwen/qwen3-vl-8b-instruct"
     #provider = LLM.OPEN_ROUTER
 
     #model = "gpt-4.1-nano"
@@ -207,25 +212,25 @@ async def get_public_key() -> Ed25519PublicKey:
         return Ed25519PublicKey.from_public_bytes(raw_bytes)    
 
 
-def verify_proof(
-    response:  SignedResponse, 
-    public_key: Ed25519PublicKey
-) -> bool:
-    """Verify the signature of the response."""
-    proof = response.proof
-    signature_b64 = response.signature
+# def verify_proof(
+#     response:  SignedResponse, 
+#     public_key: Ed25519PublicKey
+# ) -> bool:
+#     """Verify the signature of the response."""
+#     proof = response.proof
+#     signature_b64 = response.signature
 
-    print(f"Proof: {proof}")
-    print(f"Signature (base64): {signature_b64}")
+#     print(f"Proof: {proof}")
+#     print(f"Signature (base64): {signature_b64}")
 
-    signature_bytes = base64.b64decode(signature_b64)
-    serialized_proof = json.dumps(proof, sort_keys=True).encode()
-    try:
-        public_key.verify(signature_bytes, serialized_proof)
-        return True
-    except Exception as e:
-        print(f"Verification failed: {e}")
-        return False
+#     signature_bytes = base64.b64decode(signature_b64)
+#     serialized_proof = json.dumps(proof, sort_keys=True).encode()
+#     try:
+#         public_key.verify(signature_bytes, serialized_proof)
+#         return True
+#     except Exception as e:
+#         print(f"Verification failed: {e}")
+#         return False
     
 
 def remote_verify_proof(signed_response: SignedResponse) -> bool:
