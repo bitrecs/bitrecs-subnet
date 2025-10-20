@@ -81,6 +81,6 @@ REWARD_ENTITIES = True
 EMISSION_CONTROL_ENABLED = True
 EMISSION_CONTROL_RATE = 0.95
 EMISSION_CONTROL_TARGET_UID = 0
-VERIFIED_INFERENCE_URL = "https://verified.bitrecs.ai"
+VERIFIED_INFERENCE_URL = "https://verified.bitrecs.ai" if 1==2 else "https://testnet.verified.bitrecs.ai"
 TRUNCATE_LOGS_ENABLED = True
 TRUNCATE_LOGS_DB_DAYS = 60
