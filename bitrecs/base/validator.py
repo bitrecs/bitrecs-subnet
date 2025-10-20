@@ -608,8 +608,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.update_scores(rewards, chosen_uids)
                         bt.logging.info(f"Scored responses: {rewards}")
                         loop = asyncio.get_event_loop()
-                        loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
-                        #bt.logging.trace(f"SQL logging submitted to thread pool - step {self.step}")
+                        loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)                        
                         
                     else:
                         if not api_exclusive:

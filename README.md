@@ -123,13 +123,12 @@ Bitrecs does not use, collect or farm any customer data, PII or anything related
 - [x] plugin features (cart history, persona switching)
 
 ### Q3 2025
-- [x] launch mainnet
-- [ ] onboard merchants (large catalogs)
-- [ ] integrate additional platforms (magento, bigcommerce, wix)
+- [x] launch mainnet - 0.8.6
 
 ### Q4 2025
-- [ ] overall UX, reskin and make the experience more delightful for merchants
-
+- [x] reasoning scoring - 0.8.7
+- [x] verified inference - 0.8.8
+- [ ] bt v10 upgrade - 0.8.9
 
 ## Getting Started
 

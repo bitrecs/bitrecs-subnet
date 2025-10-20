@@ -165,7 +165,8 @@ def reward(
     Recommendations must exist in the original catalog
     Unique recommendations in the response is expected
     Malformed JSON or invliad skus will result in a 0.0 reward
-    Miner rewards are boosted based on end-user actions on the ecommerce sites to encourage positive recs
+    Miner rewards are boosted based on reasoning quality if enabled
+    Miner rewards are boosted by verified inference if enabled and proven
 
     Returns:
     - float: The reward value for the miner.
