@@ -1046,7 +1046,7 @@ def test_cycle_models_and_store_results():
         #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-dusk-alpha"},
         #{"provider": LLM.OPEN_ROUTER, "model": "openrouter/sonoma-sky-alpha"},
         {"provider": LLM.OPEN_ROUTER, "model": "qwen/qwen3-next-80b-a3b-instruct"},
-        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4-fast:free"},
+        {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4-fast"},
         {"provider": LLM.OPEN_ROUTER, "model":"google/gemini-2.5-flash-lite-preview-09-2025"}
 
     ]

@@ -598,7 +598,7 @@ def test_sample_user_profile():
     
 #@pytest.skip("Skipping test_sample_profile_get_similar_orders, requires database setup")
 def test_sample_profile_get_similar_orders():
-    num_recs = 8
+    num_recs = 5
     profile = get_sample_user_profile()    
     #$products = products_music()[:5000]
     products = products_music()
@@ -607,11 +607,10 @@ def test_sample_profile_get_similar_orders():
 
     context = json.dumps([asdict(products) for products in products], separators=(',', ':'))
 
-    first_order = profile.orders[0]
-    first_sku = first_order['items'][0]['sku']
-
+    #first_order = profile.orders[0]
+    #first_sku = first_order['items'][0]['sku']
     #first_sku = "FASDSLUSGSBLK"
-    #first_sku = "FSEFXOTSPCOMPRE"
+    first_sku = "FSEFXOTSPCOMPRE"
 
     viewing_product = next((p for p in products if p.sku == first_sku), None)
     assert viewing_product is not None, f"Product with SKU {first_sku} not found in products list."
@@ -651,7 +650,9 @@ def test_sample_profile_get_similar_orders():
     #model = "google/gemini-2.5-flash-lite"
     #model = "google/gemini-2.5-flash"        
     #model = "qwen3:30b-a3b-instruct-2507-q4_K_M"
-    model = "x-ai/grok-4-fast:free"
+    #model = "qwen/qwen3-next-80b-a3b-instruct"   
+    #model = "x-ai/grok-4-fast"
+    model = "google/gemini-2.5-flash-lite-preview-09-2025"
 
     #server = LLM.OLLAMA_LOCAL
     server = LLM.OPEN_ROUTER

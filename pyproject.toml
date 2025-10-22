@@ -29,7 +29,8 @@ dependencies = [
     "jsonschema==4.25.1",
     "wandb==0.21.1",
     "tiktoken==0.11.0",
-    "slowapi==0.1.9"
+    "slowapi==0.1.9",
+    "websockets==15.0.1"
 ]
 
 [project.urls]
