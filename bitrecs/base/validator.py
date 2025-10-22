@@ -29,11 +29,10 @@ import bittensor as bt
 import numpy as np
 import traceback
 import subprocess
+import secrets
 import anyio.to_thread
 from dotenv import load_dotenv
 load_dotenv()
-from random import SystemRandom
-safe_random = SystemRandom()
 from collections import Counter
 from typing import List, Union, Optional
 from dataclasses import dataclass
@@ -67,6 +66,8 @@ from bitrecs.utils.logging import (
 )
 from bitrecs.utils.wandb import WandbHelper
 from bitrecs.commerce.user_action import UserAction
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
 
 original_trace = bt.logging.trace
 def filtered_trace(message, *args, **kwargs):
@@ -197,7 +198,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.reasoning_reports: List[ReasonReport] = []    
         self.missing_evals_uids = set()
 
-        self.verified_public_key = None
+        self.verified_public_key : Ed25519PublicKey = None
         
         write_node_info(
             network=self.network,
@@ -248,15 +249,15 @@ class BaseValidatorNeuron(BaseNeuron):
 
 
     async def start_new_tempo(self):        
-        all_miners = list(self.total_uids)
-        safe_random.shuffle(all_miners)
+        all_miners = list(self.total_uids)        
+        secrets.SystemRandom().shuffle(all_miners)
         batch_size = CONST.QUERY_BATCH_SIZE
         async with self.lock:
             self.tempo_batches = [
                 all_miners[i:i+batch_size]
                 for i in range(0, len(all_miners), batch_size)
-            ]            
-            safe_random.shuffle(self.tempo_batches)
+            ]
+            secrets.SystemRandom().shuffle(self.tempo_batches)
             self.tempo_batch_index = 0
             self.batches_completed = 0
             self.batch_seen_uids = set()
@@ -273,8 +274,8 @@ class BaseValidatorNeuron(BaseNeuron):
             if len(batch) < CONST.QUERY_BATCH_SIZE:
                 needed = CONST.QUERY_BATCH_SIZE - len(batch)
                 # Flatten all miners and exclude those already in batch
-                all_miners = list(self.total_uids - set(batch))
-                safe_random.shuffle(all_miners)
+                all_miners = list(self.total_uids - set(batch))                
+                secrets.SystemRandom().shuffle(all_miners)
                 batch += all_miners[:needed]
             self.tempo_batch_index = (self.tempo_batch_index + 1) % len(self.tempo_batches)
             self.batches_completed += 1
@@ -301,6 +302,22 @@ class BaseValidatorNeuron(BaseNeuron):
         except Exception as e:
             bt.logging.error(f"Failed to create Axon initialize with exception: {e}")
             pass   
+    
+
+    @staticmethod
+    def get_dynamic_top_n(num_requests: int, 
+                                min_n: int=2, 
+                                max_n: int=CONST.QUERY_TOP_N, 
+                                min_requests: int=2, 
+                                max_requests: int=CONST.QUERY_BATCH_SIZE) -> int:
+        if max_requests == min_requests:
+            return min_n
+        if num_requests <= min_requests:
+            return min_n
+        if num_requests >= max_requests:
+            return max_n
+        scale = (max_n - min_n) / (max_requests - min_requests)
+        return min_n + int((num_requests - min_requests) * scale)
 
 
     async def analyze_similar_requests(self, requests: List[BitrecsRequest]) -> Optional[List[BitrecsRequest]]:
@@ -308,14 +325,6 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.warning(f"Too few requests to analyze: {len(requests)} on step {self.step}")
             return
         
-        async def get_dynamic_top_n(num_requests: int, min_n: int=2, max_n:int=8, min_requests: int=2, max_requests: int=CONST.QUERY_BATCH_SIZE) -> int:
-            if num_requests <= min_requests:
-                return min_n
-            if num_requests >= max_requests:
-                return max_n
-            scale = (max_n - min_n) / (max_requests - min_requests)
-            return min_n + int((num_requests - min_requests) * scale)
-  
         st = time.perf_counter()
         try:
             good_requests = [r for r in requests if r.is_success]
@@ -342,8 +351,8 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.error(f"\033[1;33m No valid recs found to analyze on step: {self.step} \033[0m")
                 return
             
-            top_n = await get_dynamic_top_n(len(valid_requests))
-            bt.logging.info(f"\033[1;32mTop {top_n} of {len(requests)} successful bitrecs \033[0m")
+            top_n = self.get_dynamic_top_n(len(valid_requests))
+            bt.logging.info(f"\033[1;32mTop {top_n} of {len(valid_requests)} successful bitrecs \033[0m")
             most_similar = select_most_similar_bitrecs(valid_requests, top_n)
             if not most_similar:
                 bt.logging.warning(f"\033[33mNo similar recs found in step: {self.step} \033[0m")
@@ -466,6 +475,10 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error("FATAL - No scoring reports, skipped.")
                             synapse_with_event.event.set()
                             continue
+                        if not self.verified_public_key:
+                            bt.logging.error("FATAL - No verified public key, skipped.")
+                            synapse_with_event.event.set()
+                            continue                        
                         
                         chosen_uids : list[int] = await self.get_next_batch()
                         if len(chosen_uids) < CONST.MIN_QUERY_BATCH_SIZE:
@@ -476,7 +489,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.batch_seen_uids.update(chosen_uids)
                         
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
-                        api_request = synapse_with_event.input_synapse                        
+                        api_request = synapse_with_event.input_synapse
                         st = time.perf_counter()
                         responses = await self.dendrite.forward(
                             axons = chosen_axons, 
@@ -531,39 +544,10 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
                         
-                        selected_rec = None
-                        good_indices = np.where(rewards > 0)[0]
+                        selected_rec = None                        
                         consensus_bonus_applied = False
-                        if len(good_indices) > 0:
-                            good_responses = [responses[i] for i in good_indices]
-                            bt.logging.info(f"Filtered to \033[32m{len(good_responses)}\033[0m from \033[32m{len(responses)}\033[0m total responses")
-                            top_k = await self.analyze_similar_requests(good_responses)
-                            if top_k:
-                                winner = safe_random.sample(top_k, 1)[0]
-                                selected_rec = responses.index(winner)
-                                
-                                MIN_UNIQUE_ENTITIES = 2
-                                FRACTION_UNIQUE_ENTITIES = 0.67
-                                entities = set([br.axon.ip for br in top_k])
-                                entity_size = len(entities)
-
-                                model_set = set([br.models_used[0] for br in top_k if br.models_used])
-                                model_diversity = len(model_set)
-                                MIN_UNIQUE_MODELS = 2
-                                FRACTION_UNIQUE_MODELS = 0.50
-
-                                if (entity_size >= MIN_UNIQUE_ENTITIES
-                                    and entity_size >= FRACTION_UNIQUE_ENTITIES * len(top_k)
-                                    and model_diversity >= MIN_UNIQUE_MODELS
-                                    and model_diversity >= FRACTION_UNIQUE_MODELS * len(top_k)):
-                                    
-                                    rewards[selected_rec] *= CONSENSUS_BONUS_MULTIPLIER
-                                    consensus_bonus_applied = True
-                                    bt.logging.info(f"\033[1;32mConsensus Miner:{winner.miner_uid}:{winner.models_used}\033[0m")
-                                else:
-                                    bt.logging.warning(f"\033[33mNo consensus bonus for round, low diversity: {entity_size}:{model_diversity} \033[0m")
-                                
-                        else:
+                        good_indices = np.where(rewards > 0)[0]
+                        if len(good_indices) == 0:
                             bt.logging.error(f"\033[1;33mNo valid candidates in {len(responses)} responses, request aborted.\033[0m")
                             self.update_scores(rewards, chosen_uids)
                             self.bad_set_count += 1
@@ -571,6 +555,31 @@ class BaseValidatorNeuron(BaseNeuron):
                             loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)                            
                             synapse_with_event.event.set()
                             continue
+                       
+                        good_responses = [responses[i] for i in good_indices]
+                        good_rewards = [rewards[i] for i in good_indices]
+                        bt.logging.info(f"Filtered to \033[32m{len(good_responses)}\033[0m from \033[32m{len(responses)}\033[0m total responses")
+                        top_scoring_limit = self.get_dynamic_top_n(len(good_responses))
+                        sorted_pairs = sorted(zip(good_responses, good_rewards), key=lambda x: x[1], reverse=True)
+                        top_scoring_responses = [pair[0] for pair in sorted_pairs[:top_scoring_limit]]
+                        top_k = await self.analyze_similar_requests(top_scoring_responses)
+                        if top_k:
+                            winner = secrets.choice(top_k)
+                            selected_rec = responses.index(winner)
+                            entities = set([br.axon.ip for br in top_k])
+                            entity_size = len(entities)
+                            model_set = set([br.models_used[0] for br in top_k if br.models_used])
+                            model_diversity = len(model_set)
+                            if (entity_size >= CONST.MIN_UNIQUE_ENTITIES_FOR_BATCH
+                                and entity_size >= CONST.FRACTION_UNIQUE_ENTITIES_FOR_BATCH * len(top_k)
+                                and model_diversity >= CONST.MIN_UNIQUE_MODELS_FOR_BATCH
+                                and model_diversity >= CONST.FRACTION_UNIQUE_MODELS_FOR_BATCH * len(top_k)):
+                                
+                                rewards[selected_rec] *= CONSENSUS_BONUS_MULTIPLIER
+                                consensus_bonus_applied = True
+                                bt.logging.info(f"\033[1;32mConsensus Miner:{winner.miner_uid}:{winner.models_used}\033[0m")
+                            else:
+                                bt.logging.warning(f"\033[33mNo consensus bonus for round, low diversity: {entity_size}:{model_diversity} \033[0m")
                         
                         if selected_rec is None:
                             bt.logging.error(f"\033[1;31mNo consensus rec elected in {len(responses)} responses, request aborted.\033[0m")
