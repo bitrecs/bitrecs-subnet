@@ -110,7 +110,7 @@ class Validator(BaseValidatorNeuron):
         if self.should_sync_metagraph():
             bt.logging.info(f"Sync metagraph tempo_sync size: {len(self.total_uids)} at block {self.block}")
             self.resync_metagraph()
-            self.update_total_uids()
+            await self.update_total_uids()
             bt.logging.info(f"Metagraph resynced - final size: {len(self.total_uids)}")
 
         current_tempo = get_current_tempo(self)
@@ -402,7 +402,7 @@ async def main():
         validator_instance = validator
         start_time = time.time()
         await validator.cooldown_sync()
-        validator.update_total_uids()
+        await validator.update_total_uids()
         while True:
             tasks = [
                 asyncio.create_task(validator.verified_sync()),

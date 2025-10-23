@@ -234,17 +234,18 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info(f"Validator Initialized at block: {self.block}")
 
 
-    def update_total_uids(self):        
+    async def update_total_uids(self):                
         uids, cooldown_uids = get_all_miner_uids(self, 
             banned_coldkeys=self.banned_coldkeys,
             banned_hotkeys=self.banned_hotkeys,
             banned_ips=self.banned_ips
         )
-        self.total_uids = set(
-            uid for uid in uids
-            if uid not in self.exclusion_uids
-        )
-        self.suspect_miners = cooldown_uids
+        async with self.lock:
+            self.total_uids = set(
+                uid for uid in uids
+                if uid not in self.exclusion_uids
+            )
+            self.suspect_miners = cooldown_uids
         bt.logging.info(f"Total UIDs updated: {len(self.total_uids)}")
 
 
@@ -352,7 +353,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 return
             
             top_n = self.get_dynamic_top_n(len(valid_requests))
-            bt.logging.info(f"\033[1;32mTop {top_n} of {len(valid_requests)} successful bitrecs \033[0m")
+            bt.logging.info(f"\033[1;32mTop {top_n} of {len(valid_requests)}/{len(requests)} bitrecs \033[0m")
             most_similar = select_most_similar_bitrecs(valid_requests, top_n)
             if not most_similar:
                 bt.logging.warning(f"\033[33mNo similar recs found in step: {self.step} \033[0m")
@@ -486,7 +487,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
-                        self.batch_seen_uids.update(chosen_uids)
+                        async with self.lock:
+                            self.batch_seen_uids.update(chosen_uids)
                         
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         api_request = synapse_with_event.input_synapse
