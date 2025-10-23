@@ -1,4 +1,4 @@
-# Verified Inference
+# Verified 🤝 Inference
 
 TLDR;
 
@@ -15,7 +15,7 @@ Just add '--verified.inference' to your startup command and your requests will p
 
 ## Validator Setup
 
-No changes needed, verified inference is opt-in
+No changes needed, verified inference is opt-in for miners.
 
 ## Endpoints
 
@@ -31,7 +31,7 @@ Verifier health
 
 https://testnet.verified.bitrecs.ai/health
 
-## Trusted Infernece
+## Trusted Inference
 <img src="verified_inference.png" alt="Verified Inference" style="border: solid 1px #059669; padding: 2" title="Verified Inference"/>
 
 
