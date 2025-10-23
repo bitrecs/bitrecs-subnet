@@ -388,10 +388,10 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info(f"\033[35mVerified sync ran at {int(time.time())}\033[0m")
         self.verified_public_key = await get_verified_public_key()
         if self.verified_public_key:
-            bt.logging.info(f"\033[32mVerified public key loaded successfully for network: {self.network}\033[0m")
+            bt.logging.info(f"\033[32mVerifier key loaded for network: {self.network}\033[0m")
         else:
-            bt.logging.error(f"\033[31mFailed to load verified public key for network: {self.network}\033[0m")
-            raise Exception("Failed to load verified public key")
+            bt.logging.error(f"\033[31mFailed to load verifier key for network: {self.network}\033[0m")
+            raise Exception("Failed to load verifier public key")
 
     
 
