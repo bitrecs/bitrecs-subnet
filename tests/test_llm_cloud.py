@@ -32,9 +32,9 @@ map = [
     #{"provider": LLM.OPEN_ROUTER, "model": "nousresearch/deephermes-3-llama-3-8b-preview:free"},
 
     {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-lite"},
+    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-preview-09-2025"},
     {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-scout"},
-    {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-4.1-nano"},
+    {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-5-nano"},
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-2.0-flash-001"},

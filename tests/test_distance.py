@@ -435,8 +435,8 @@ def test_local_llm_bitrecs_mock_ok():
 
 def test_local_llm_base_config_jaccard():
     config = TestConfig()    
-    #products = product_1k()
-    products = product_5k()
+    products = product_1k()
+    #products = product_5k()
     products = ProductFactory.dedupe(products)
     product = safe_random.choice(products)
     product_name = product_name_by_sku_trimmed(product.sku, 500)
