@@ -31,6 +31,7 @@ from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.reasoning import ReasonReport
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from cryptography.exceptions import InvalidSignature
 
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
@@ -131,20 +132,40 @@ def verify_time(response: BitrecsRequest) -> bool:
 
 
 def verify_proof(
-    response:  SignedResponse, 
+    response: SignedResponse,
     public_key: Ed25519PublicKey
 ) -> bool:
-    """Verify proof of inference"""
     proof = response.proof
-    signature_b64 = response.signature    
+    signature_b64 = response.signature
+    timestamp = response.timestamp
+    ttl = response.ttl
     try:
+        current_time = datetime.now(timezone.utc)
+        response_time = datetime.fromisoformat(timestamp)
+        ttl_time = datetime.fromisoformat(ttl)
+        time_diff = abs((current_time - response_time).total_seconds())
+        if time_diff > 300:
+            bt.logging.error(f"Timestamp too old or future: {time_diff} seconds")
+            return False
+        if current_time > ttl_time:
+            bt.logging.error(f"Proof expired: TTL {ttl_time}, current {current_time}")
+            return False
+        signed_data = {
+            "proof": proof,
+            "timestamp": timestamp,
+            "ttl": ttl
+        }
+        serialized_data = json.dumps(signed_data, sort_keys=True).encode()
         signature_bytes = base64.b64decode(signature_b64)
-        serialized_proof = json.dumps(proof, sort_keys=True).encode()
-        public_key.verify(signature_bytes, serialized_proof)
+        public_key.verify(signature_bytes, serialized_data)
         return True
-    except Exception as e:        
-        bt.logging.error(f"verify_proof Verification failed: {e}")
+    except InvalidSignature:
+        bt.logging.error("verify_proof Verification failed: Invalid signature")
         return False
+    except Exception as e:
+        bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e)}")
+        return False
+    
 
 
 def reward(
