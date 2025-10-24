@@ -39,6 +39,7 @@ CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
 VERFIED_BONUS_MULTIPLIER = 1.15
 SUSPECT_MINER_DECAY = 0.980
+PERMITTED_CLOCK_DIFF_SECONDS = 300
 
 
 class CatalogValidator:
@@ -126,7 +127,7 @@ def verify_time(response: BitrecsRequest) -> bool:
         response_time = response_time.replace(tzinfo=timezone.utc)
     utc_now = datetime.now(timezone.utc)
     age = (utc_now - response_time).total_seconds()
-    if age <= 0 or age > 300:
+    if age <= 0 or age > PERMITTED_CLOCK_DIFF_SECONDS:
         bt.logging.error(f"Failed verify_time: {age} seconds for {response.axon.hotkey[:8]}")
         return False
     return True
@@ -142,10 +143,10 @@ def verify_proof(
     ttl = response.ttl
     try:
         current_time = datetime.now(timezone.utc)
-        response_time = datetime.fromisoformat(timestamp)
+        proof_time = datetime.fromisoformat(timestamp)
         ttl_time = datetime.fromisoformat(ttl)
-        time_diff = abs((current_time - response_time).total_seconds())
-        if time_diff > 300:
+        time_diff = abs((current_time - proof_time).total_seconds())
+        if time_diff > PERMITTED_CLOCK_DIFF_SECONDS:
             bt.logging.error(f"Timestamp too old or future: {time_diff} seconds")
             return False
         if current_time > ttl_time:
@@ -167,8 +168,7 @@ def verify_proof(
         bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e) or 'No message'}")
         tb = traceback.print_exc()
         bt.logging.error(f"Traceback:\n{tb}")
-        return False
-    
+        return False    
 
 
 def reward(
@@ -261,7 +261,7 @@ def reward(
                     bt.logging.error(f"{response.miner_uid} has duplicate results: {response.miner_hotkey[:8]}")
                     return 0.0
                 if not catalog_validator.validate_sku(sku):
-                    bt.logging.error(f"{response.miner_uid} has invalid results: {response.miner_hotkey[:8]}")
+                    bt.logging.error(f"{response.miner_uid} has skus not in the catalog: {response.miner_hotkey[:8]}")
                     return 0.0
                 
                 valid_items.add(sku)
