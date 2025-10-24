@@ -19,6 +19,7 @@
 import base64
 import json
 import hashlib
+import traceback
 import numpy as np
 import bittensor as bt
 import jsonschema
@@ -163,7 +164,9 @@ def verify_proof(
         bt.logging.error("verify_proof Verification failed: Invalid signature")
         return False
     except Exception as e:
-        bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e)}")
+        bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e) or 'No message'}")
+        tb = traceback.print_exc()
+        bt.logging.error(f"Traceback:\n{tb}")
         return False
     
 

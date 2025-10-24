@@ -154,8 +154,8 @@ async def test_openrouter_verified_inf():
     for sku, count in counter.items():
         print(f"{sku}: {count}")
         assert count == 1
-    assert user_prompt not in skus
-
+    assert user_prompt not in skus   
+    
 
 
 async def get_public_key() -> Ed25519PublicKey:
