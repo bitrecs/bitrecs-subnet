@@ -1,14 +1,16 @@
 import os
 import json
 import logging
+import sqlite3
 import bittensor as bt
 import numpy as np
 import pandas as pd
-import sqlite3
+from pathlib import Path
 from datetime import datetime, timezone
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
 from bitrecs.protocol import BitrecsRequest
+from bitrecs.utils import constants as CONST
 from bitrecs.utils.constants import SCHEMA_UPDATE_CUTOFF, TRUNCATE_LOGS_DB_DAYS, TRUNCATE_LOGS_ENABLED
 
 EVENTS_LEVEL_NUM = 38
@@ -47,8 +49,7 @@ def setup_events_logger(full_path, events_retention_size):
 
 
 def write_node_info(network, uid, hotkey, neuron_type, sample_size, v_limit, epoch_length) -> None:
-    """Write node information for the auto-updater"""
-    #node_info_file = 'node_info.json'
+    """Write node information for the auto-updater"""    
     node_info = {
         "network": network,
         "uid": uid,
@@ -59,8 +60,7 @@ def write_node_info(network, uid, hotkey, neuron_type, sample_size, v_limit, epo
         "v_limit": v_limit,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    }
-    
+    }    
     tmp_file = NODE_INFO_FILE + '.tmp'    
     try:
         with open(tmp_file, 'w', encoding='utf-8') as f:
@@ -123,13 +123,19 @@ def update_table_schema(conn: sqlite3.Connection, required_columns: list) -> Non
 
 
 def truncate_miner_log_db(since_date: datetime) -> int:
-    """Truncate miner log database to remove entries older than since_date."""
-    db_path = os.path.join(os.getcwd(), 'miner_responses.db')
-    if not os.path.exists(db_path):
+    """Truncate miner log database to remove entries older than since_date."""    
+    db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
+    if db_path_env:
+        data_file = Path(db_path_env)
+        bt.logging.info(f"Using custom DB path from env: {data_file}")
+    else:
+        data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
+    
+    if not os.path.exists(data_file):
         bt.logging.error("No miner_responses.db found to truncate")
         return 0
     try:
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(data_file)
         cursor = conn.cursor()
         cutoff_str = since_date.strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute("DELETE FROM miner_responses WHERE created_at < ?", (cutoff_str,))
@@ -178,8 +184,15 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewar
         if len(final) > 0:
             utc_now = datetime.now(timezone.utc)
             created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-            db_path = os.path.join(os.getcwd(), 'miner_responses.db')
-            conn = sqlite3.connect(db_path)
+            # Use environment variable for DB path, fallback to current working directory
+            db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
+            if db_path_env:
+                data_file = Path(db_path_env)
+                bt.logging.info(f"Using custom DB path from env: {data_file}")
+            else:
+                data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
+            
+            conn = sqlite3.connect(data_file)
             try:
                 final['step'] = step
                 final['created_at'] = created_at

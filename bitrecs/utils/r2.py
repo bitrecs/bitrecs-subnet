@@ -4,12 +4,14 @@ import requests
 import json
 import secrets
 import bittensor as bt
+from pathlib import Path
 from urllib.parse import urlparse
 from typing import Any, Dict, Tuple
 from datetime import datetime
 from dataclasses import asdict, dataclass, field
 from substrateinterface import Keypair
 from bitrecs.utils import constants as CONST
+
 SERVICE_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
 
@@ -82,22 +84,47 @@ def get_r2_upload_url(report: ValidatorUploadRequest, keypair: Keypair) -> str:
             bt.logging.error(response.text)
             return ""
 
-    except requests.exceptions.RequestException as e:
-        #print(f"An error occurred: {e}")
+    except requests.exceptions.RequestException as e:        
         bt.logging.error(f"An error occurred: {e}")
         return ""
+
+
 
 
 def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
     if not request or not keypair:
         return False    
     
-    data_file = os.path.join(CONST.ROOT_DIR, "miner_responses.db")
-    if not os.path.exists(data_file):
+    db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
+    if db_path_env:
+        data_file = Path(db_path_env)
+        bt.logging.info(f"Using custom DB path from env: {data_file}")
+    else:
+        data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
+    
+    if not data_file.exists():
         bt.logging.error(f"Miner response file does not exist: {data_file}")
         return False
-    if not os.path.isfile(data_file):
-        bt.logging.error(f"Miner response path is not a file: {data_file} (is it a directory?)")
+    if not data_file.is_file():
+        if data_file.is_dir():
+            potential_file = data_file / "miner_responses.db"
+            if potential_file.is_file():
+                bt.logging.warning(f"Data path is a directory, using file inside: {potential_file}")
+                data_file = potential_file
+            else:
+                bt.logging.warning(f"Data path is a directory but no 'miner_responses.db' file found inside, skipping upload: {data_file}")
+                return False
+        else:
+            bt.logging.error(f"Data path exists but is not a regular file: {data_file}")
+            return False
+    
+    try:
+        file_size = data_file.stat().st_size
+        if file_size == 0:
+            bt.logging.error(f"R2 Upload File is empty: {data_file}")
+            return False     
+    except OSError as e:
+        bt.logging.error(f"Failed to get file stats: {e}")
         return False
     
     signed_url = get_r2_upload_url(request, keypair)
@@ -106,22 +133,22 @@ def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
         return False
     
     bt.logging.trace("STARTING UPLOAD -----------------------------------------")
-    try:
-        with open(data_file, 'rb') as f:
+    try:        
+        with data_file.open('rb') as f:
             file_data = f.read()
             
         headers = {
             'Content-Type': 'application/x-sqlite3',
             'Content-Length': str(len(file_data))
-        }        
-        
+        }
+
         response = requests.put(
-            signed_url, 
+            signed_url,
             data=file_data,
             headers=headers,
             timeout=900
         )
-        
+
         if response.status_code in (200, 201):
             bt.logging.info("Successfully uploaded to R2")
             bt.logging.info("FINISHED UPLOAD SUCCESS -----------------------------------------")
@@ -130,8 +157,9 @@ def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
             bt.logging.error(f"Upload failed with status code: {response.status_code}")
             bt.logging.error("Response headers:", dict(response.headers))
             bt.logging.error("Response body:", response.text)
+            bt.logging.info("FINISHED UPLOAD FAILURE -----------------------------------------")
             return False
-            
+                    
     except requests.exceptions.RequestException as e:        
         bt.logging.error(f"Upload request failed: {str(e)}")
         return False
