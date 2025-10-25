@@ -47,6 +47,16 @@ def setup_events_logger(full_path, events_retention_size):
     return logger
 
 
+def get_db_log_path() -> Path:
+    """Get the path to the miner responses database file."""
+    db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
+    if db_path_env:
+        data_file = Path(db_path_env)
+        bt.logging.trace(f"Using custom DB path: {data_file}")
+    else:
+        data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
+    return data_file
+
 
 def write_node_info(network, uid, hotkey, neuron_type, sample_size, v_limit, epoch_length) -> None:
     """Write node information for the auto-updater"""    
@@ -123,16 +133,10 @@ def update_table_schema(conn: sqlite3.Connection, required_columns: list) -> Non
 
 
 def truncate_miner_log_db(since_date: datetime) -> int:
-    """Truncate miner log database to remove entries older than since_date."""    
-    db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
-    if db_path_env:
-        data_file = Path(db_path_env)
-        bt.logging.info(f"Using custom DB path from env: {data_file}")
-    else:
-        data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
-    
+    """Truncate miner log database to remove entries older than since_date."""
+    data_file = get_db_log_path()
     if not os.path.exists(data_file):
-        bt.logging.error("No miner_responses.db found to truncate")
+        bt.logging.error(f"No miner_responses.db found to truncate")
         return 0
     try:
         conn = sqlite3.connect(data_file)
@@ -184,14 +188,7 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewar
         if len(final) > 0:
             utc_now = datetime.now(timezone.utc)
             created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-            # Use environment variable for DB path, fallback to current working directory
-            db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
-            if db_path_env:
-                data_file = Path(db_path_env)
-                bt.logging.info(f"Using custom DB path from env: {data_file}")
-            else:
-                data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
-            
+            data_file = get_db_log_path()
             conn = sqlite3.connect(data_file)
             try:
                 final['step'] = step

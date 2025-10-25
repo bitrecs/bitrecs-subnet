@@ -10,8 +10,9 @@ from typing import Any, Dict, Tuple
 from datetime import datetime
 from dataclasses import asdict, dataclass, field
 from substrateinterface import Keypair
-from bitrecs.utils import constants as CONST
-
+from bitrecs.utils.logging import (     
+    get_db_log_path  
+)
 SERVICE_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
 
@@ -93,31 +94,9 @@ def get_r2_upload_url(report: ValidatorUploadRequest, keypair: Keypair) -> str:
 
 def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
     if not request or not keypair:
-        return False    
-    
-    db_path_env = os.environ.get("MINER_RESPONSES_DB_PATH")
-    if db_path_env:
-        data_file = Path(db_path_env)
-        bt.logging.info(f"Using custom DB path from env: {data_file}")
-    else:
-        data_file = Path(CONST.ROOT_DIR) / "miner_responses.db"
-    
-    if not data_file.exists():
-        bt.logging.error(f"Miner response file does not exist: {data_file}")
         return False
-    if not data_file.is_file():
-        if data_file.is_dir():
-            potential_file = data_file / "miner_responses.db"
-            if potential_file.is_file():
-                bt.logging.warning(f"Data path is a directory, using file inside: {potential_file}")
-                data_file = potential_file
-            else:
-                bt.logging.warning(f"Data path is a directory but no 'miner_responses.db' file found inside, skipping upload: {data_file}")
-                return False
-        else:
-            bt.logging.error(f"Data path exists but is not a regular file: {data_file}")
-            return False
     
+    data_file = get_db_log_path()
     try:
         file_size = data_file.stat().st_size
         if file_size == 0:
