@@ -96,6 +96,9 @@ def put_r2_upload(request: ValidatorUploadRequest, keypair: Keypair) -> bool:
     if not os.path.exists(data_file):
         bt.logging.error(f"Miner response file does not exist: {data_file}")
         return False
+    if not os.path.isfile(data_file):
+        bt.logging.error(f"Miner response path is not a file: {data_file} (is it a directory?)")
+        return False
     
     signed_url = get_r2_upload_url(request, keypair)
     if not is_valid_url(signed_url):

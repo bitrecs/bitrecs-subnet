@@ -546,15 +546,18 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
                         
-                        selected_rec = None                        
+                        selected_rec = None
                         consensus_bonus_applied = False
                         good_indices = np.where(rewards > 0)[0]
                         if len(good_indices) == 0:
                             bt.logging.error(f"\033[1;33mNo valid candidates in {len(responses)} responses, request aborted.\033[0m")
                             self.update_scores(rewards, chosen_uids)
                             self.bad_set_count += 1
+                            if self.bad_set_count % 20 == 0:
+                                bt.logging.trace("Forcing sync due to 20 bad sets")
+                            self.sync()
                             loop = asyncio.get_event_loop()
-                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)                            
+                            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)
                             synapse_with_event.event.set()
                             continue
                        
