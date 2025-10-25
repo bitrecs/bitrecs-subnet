@@ -555,7 +555,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             self.bad_set_count += 1
                             if self.bad_set_count % 20 == 0:
                                 bt.logging.trace("Forcing sync due to 20 bad sets")
-                            self.sync()
+                                self.sync()
                             loop = asyncio.get_event_loop()
                             loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, None)
                             synapse_with_event.event.set()
