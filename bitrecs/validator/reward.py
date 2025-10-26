@@ -24,7 +24,7 @@ import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
-from typing import List
+from typing import List, Tuple
 from datetime import datetime, timezone
 from bitrecs.commerce.user_action import UserAction
 from bitrecs.protocol import BitrecsRequest, SignedResponse
@@ -181,7 +181,7 @@ def reward(
     r_limit: float = 1.0,
     max_f_score: float = 1.0,
     verified_public_key: Ed25519PublicKey = None
-) -> float:
+) -> Tuple[float, str]:
     """
     Score the Miner's response to the BitrecsRequest 
 
@@ -201,52 +201,52 @@ def reward(
         if response.dendrite.hotkey != validator_hotkey:
             bt.logging.error(f"Response from different hotkey: {response.dendrite.hotkey} != {validator_hotkey}")
             bt.logging.error(f"Miner hotkey: {response.axon.hotkey[:8]}")
-            return 0.0
+            return 0.0, "Invalid_Validator_Hotkey"
         if not response.dendrite.signature:
             bt.logging.error(f"Response missing signature: {response.axon.hotkey[:8]}")
-            return 0.0
+            return 0.0, "Missing_Dendrite_Signature"
         if response.is_timeout:
             bt.logging.error(f"{response.axon.hotkey[:8]} is_timeout is True, status: {response.dendrite.status_code}")
-            return 0.0
+            return 0.0, "Timeout"
         if response.is_failure:
             bt.logging.error(f"{response.axon.hotkey[:8]} is_failure is True, status: {response.dendrite.status_code}")
-            return 0.0
+            return 0.0, "Failure"
         if not response.is_success:
             bt.logging.error(f"{response.axon.hotkey[:8]} is_success is False, status: {response.dendrite.status_code}")
-            return 0.0
+            return 0.0, "Unsuccessful"
         if not verify_time(response):
             bt.logging.error(f"{response.axon.hotkey[:8]} response time verification failed")
-            return 0.0
+            return 0.0, "Invalid_Timestamp"
         if not verify_miner_signature(response):
             bt.logging.error(f"{response.axon.hotkey[:8]} signature verification failed")
-            return 0.0
+            return 0.0, "Invalid_Signature"
         if not response.miner_uid or not response.miner_hotkey:
             bt.logging.error(f"{response.axon.hotkey[:8]} is not reporting correctly (missing ids)")
-            return 0.0
+            return 0.0, "Missing_Miner_IDs"
         if response.miner_hotkey.lower() != response.axon.hotkey.lower():
             bt.logging.error(f"{response.miner_uid} hotkey mismatch: {response.miner_hotkey} != {response.axon.hotkey}")
-            return 0.0
+            return 0.0, "Invalid_Miner_Hotkey"
         if len(response.results) != ground_truth.num_results:
             bt.logging.error(f"{response.miner_uid} num_recs mismatch, expected {ground_truth.num_results} but got {len(response.results)}")
-            return 0.0
+            return 0.0, "Invalid_Num_Results"
         if len(response.models_used) != 1:
             bt.logging.error(f"{response.miner_uid} has invalid models used: {response.miner_hotkey[:8]}")
-            return 0.0
+            return 0.0, "Invalid_Models_Used"
         if response.axon.process_time < r_limit:
             bt.logging.error(f"\033[33m WARNING Miner {response.miner_uid} axon time: {response.axon.process_time} < {r_limit}\033[0m")
-            return 0.0
+            return 0.0, "Invalid_Axon_Time"
         if response.dendrite.process_time < r_limit:
             bt.logging.error(f"\033[33m WARNING Miner {response.miner_uid} dendrite time: {response.dendrite.process_time} < {r_limit}\033[0m")
-            return 0.0
+            return 0.0, "Invalid_Dendrite_Time"
         if response.query != ground_truth.query:
             bt.logging.error(f"{response.miner_uid} query mismatch: {response.query} != {ground_truth.query}")
-            return 0.0
+            return 0.0, "Invalid_Query"
         if response.context != "[]":
             bt.logging.error(f"{response.miner_uid} context is not empty: {response.context}")
-            return 0.0
+            return 0.0, "Invalid_Context"
         if not validate_result_schema(ground_truth.num_results, response.results):
             bt.logging.error(f"{response.miner_uid} failed schema validation: {response.miner_hotkey[:8]}")
-            return 0.0        
+            return 0.0, "Invalid_Schema" 
      
         valid_items = set()
         query_lower = response.query.lower().strip()
@@ -256,52 +256,57 @@ def reward(
                 sku = product["sku"]
                 if sku.lower() == query_lower:
                     bt.logging.error(f"{response.miner_uid} has query in results: {response.miner_hotkey[:8]}")
-                    return 0.0
+                    return 0.0, "Query_In_Results"
                 if sku in valid_items:
                     bt.logging.error(f"{response.miner_uid} has duplicate results: {response.miner_hotkey[:8]}")
-                    return 0.0
+                    return 0.0, "Duplicate_Results"
                 if not catalog_validator.validate_sku(sku):
                     bt.logging.error(f"{response.miner_uid} has skus not in the catalog: {response.miner_hotkey[:8]}")
-                    return 0.0
+                    return 0.0, "Invalid_SKU"
                 
                 valid_items.add(sku)
             except Exception as e:
                 bt.logging.error(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
-                return 0.0
+                return 0.0, "Invalid_JSON"
 
         if len(valid_items) != ground_truth.num_results:
             bt.logging.error(f"{response.miner_uid} invalid number of valid_items: {response.miner_hotkey[:8]}")
-            return 0.0
+            return 0.0, "Numrecs_Mismatch"
         
         score = BASE_REWARD
-
+        score_notes = ["Base_Reward"]        
         if CONST.REASONING_SCORING_ENABLED:
             if not reasoning_report:
                 score = BASE_REWARD / 4
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no report score:{score}\033[0m")
+                score_notes.append("No_Reasoning_Report")
             elif reasoning_report.f_score <= 0:
                 score = BASE_REWARD / 2
                 bt.logging.warning(f"\033[33m{response.miner_hotkey[:8]} no/low reasoning score:{score}\033[0m")
+                score_notes.append("Low_Reasoning_Score")
             else:
                 f_score = min(reasoning_report.f_score, max_f_score)
                 score = BASE_REWARD + f_score
                 score *= REASONING_BONUS_MULTIPLIER
                 bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")
+                score_notes.append("Reasoning_Bonus")
 
         if response.verified_proof and verified_public_key:
             signed_response = SignedResponse(**response.verified_proof)
             verified = verify_proof(signed_response, verified_public_key)
             if not verified:
-                score = 0.0
                 bt.logging.error(f"{response.axon.hotkey[:8]} Verified Inference Failed: {response.miner_uid}")
+                return 0.0, "Invalid_Verified_Proof"
             else:
                 score *= VERFIED_BONUS_MULTIPLIER
                 bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]} Verified Inference Success: {response.miner_uid}\033[0m")
-
-        return score
+                score_notes.append("Verified_Proof_Bonus")
+        
+        notes = " | ".join(score_notes)
+        return score, notes
     except Exception as e:
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")
-        return 0.0
+        return 0.0, "Exception_Error"
 
 
 
@@ -315,7 +320,7 @@ def get_rewards(
     batch_size: int = 16,
     entity_threshold: float = 0.2,
     verified_public_key: Ed25519PublicKey = None
-) -> np.ndarray:
+) -> Tuple[np.ndarray, List[str]]:
     """
     Returns an array of rewards for the given query and responses.
     - validator_hotkey: The hotkey of the validator.
@@ -405,14 +410,25 @@ def get_rewards(
         bt.logging.trace(f"\033[32mReasoning scoring is enabled\033[0m")
 
     rewards = []
+    reward_notes = []
     for i, response in enumerate(responses):
         if response.axon.ip in entity_ips and not CONST.REWARD_ENTITIES:
             rewards.append(0.0)
+            reward_notes.append("Entity_No_Reward")
             continue
         
         r_report = get_reasoning_report(response, reasoning_reports)
         max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
-        miner_reward = reward(validator_hotkey, ground_truth, catalog_validator, response, r_report, actions, r_limit, max_f_score, verified_public_key)
+        miner_reward, reward_note = reward(validator_hotkey, 
+                              ground_truth, 
+                              catalog_validator, 
+                              response, 
+                              r_report, 
+                              actions, 
+                              r_limit, 
+                              max_f_score, 
+                              verified_public_key)
+        reward_notes.append(reward_note)
         if miner_reward <= 0.0:
             rewards.append(0.0)
             continue
@@ -422,7 +438,8 @@ def get_rewards(
             final_score = miner_reward
         rewards.append(final_score)
 
-    return np.array(rewards, dtype=float)
+    result = (np.array(rewards, dtype=float), reward_notes)
+    return result    
 
 
 def measure_request_difficulty(
