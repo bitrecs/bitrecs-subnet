@@ -186,8 +186,7 @@ def reward(
     Score the Miner's response to the BitrecsRequest   
 
     Returns:
-    - float: The reward value for the miner.
-    - str: Notes on the reward calculation.
+    - Tuple[float, str]: A tuple containing the score and notes.  
     """
     
     try:
@@ -285,7 +284,7 @@ def reward(
                 bt.logging.trace(f"\033[32m{response.miner_hotkey[:8]} score:{score:.6f} f_score: {f_score:.6f} rank: {reasoning_report.rank}\033[0m")
                 score_notes.append("Reasoning_Bonus")
 
-        if response.verified_proof and verified_public_key:
+        if response.verified_proof and response.verified_proof != {} and verified_public_key:
             signed_response = SignedResponse(**response.verified_proof)
             verified = verify_proof(signed_response, verified_public_key)
             if not verified:
@@ -326,7 +325,7 @@ def get_rewards(
     - entity_threshold: The threshold for considering nodes as entities.
     - verified_public_key: The public key used to verify proofs of inference.
     Returns:
-    - np.ndarray: An array of rewards for each response.
+    - Tuple[np.ndarray, List[str]]: A tuple containing an array of rewards and a list of reward notes.    
     
     """
 
