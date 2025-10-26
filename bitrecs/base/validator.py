@@ -437,14 +437,14 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.warning(f"IP {response.axon.ip} | dhk: {response.dendrite.hotkey} | ahk: {response.axon.hotkey} | uid: {response.miner_uid}")
 
 
-    async def log_responses(self, 
-                            responses: List[BitrecsRequest],
-                            rewards: List[float] = None,
-                            reward_notes: List[str] = None,
-                            elected: BitrecsRequest = None) -> None:
+    def log_responses(self, 
+                    responses: List[BitrecsRequest],
+                    rewards: List[float] = None,
+                    reward_notes: List[str] = None,
+                    elected: BitrecsRequest = None) -> None:
         try:
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
+            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
         except Exception as e:
             bt.logging.error(f"Logging failed: {e}")
 
@@ -528,8 +528,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             if not any_success: #don't penalize the entire set, just exit
                                 bt.logging.error("\033[1;31mRETRY FAILED - NO SUCCESSFUL RESPONSES\033[0m")
                                 self.bad_set_count += 1   
-                                notes = ["No successful responses after retry" for _ in responses]                             
-                                asyncio.create_task(self.log_responses(responses, None, notes, None))
+                                notes = ["Batch_Fail_Retry" for _ in responses]                             
+                                self.log_responses(responses, None, notes, None)
                                 synapse_with_event.event.set()
                                 continue
 
@@ -537,9 +537,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
                         if not self.check_response_structure(responses):                            
                             bt.logging.error("\033[1;31m Invalid response structure detected - skipping batch \033[0m")
-                            self.bad_set_count += 1                            
-                            notes = ["Invalid response structure" for _ in responses]
-                            asyncio.create_task(self.log_responses(responses, None, notes, None))
+                            self.bad_set_count += 1
+                            notes = ["Batch_Fail_Structure" for _ in responses]
+                            self.log_responses(responses, None, notes, None)
                             synapse_with_event.event.set()
                             continue
 
@@ -568,7 +568,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             if self.bad_set_count % 20 == 0:
                                 bt.logging.trace("Forcing sync due to 20 bad sets")
                                 self.sync()
-                            asyncio.create_task(self.log_responses(responses, rewards, reward_notes, None))
+                            self.log_responses(responses, rewards, reward_notes, None)
                             synapse_with_event.event.set()
                             continue
                        
@@ -601,7 +601,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error(f"\033[1;31mNo consensus rec elected in {len(responses)} responses, request aborted.\033[0m")
                             self.update_scores(rewards, chosen_uids)
                             self.bad_set_count += 1
-                            asyncio.create_task(self.log_responses(responses, rewards, reward_notes, None))
+                            self.log_responses(responses, rewards, reward_notes, None)
                             synapse_with_event.event.set()
                             continue
                     
@@ -631,7 +631,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         self.update_scores(rewards, chosen_uids)
                         bt.logging.info(f"Scored responses: {rewards}")
-                        asyncio.create_task(self.log_responses(responses, rewards, reward_notes, elected))
+                        self.log_responses(responses, rewards, reward_notes, elected)
                         
                     else:
                         if not api_exclusive:
