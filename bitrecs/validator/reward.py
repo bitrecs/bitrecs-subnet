@@ -183,17 +183,11 @@ def reward(
     verified_public_key: Ed25519PublicKey = None
 ) -> Tuple[float, str]:
     """
-    Score the Miner's response to the BitrecsRequest 
-
-    Nubmer of recommendations should match the requested number of recommendations
-    Recommendations must exist in the original catalog
-    Unique recommendations in the response is expected
-    Malformed JSON or invliad skus will result in a 0.0 reward
-    Miner rewards are boosted based on reasoning quality if enabled
-    Miner rewards are boosted by verified inference if enabled and proven
+    Score the Miner's response to the BitrecsRequest   
 
     Returns:
     - float: The reward value for the miner.
+    - str: Notes on the reward calculation.
     """
     
     try:
@@ -222,7 +216,7 @@ def reward(
             return 0.0, "Invalid_Signature"
         if not response.miner_uid or not response.miner_hotkey:
             bt.logging.error(f"{response.axon.hotkey[:8]} is not reporting correctly (missing ids)")
-            return 0.0, "Missing_Miner_IDs"
+            return 0.0, "Missing_Miner_UID"
         if response.miner_hotkey.lower() != response.axon.hotkey.lower():
             bt.logging.error(f"{response.miner_uid} hotkey mismatch: {response.miner_hotkey} != {response.axon.hotkey}")
             return 0.0, "Invalid_Miner_Hotkey"
@@ -246,7 +240,7 @@ def reward(
             return 0.0, "Invalid_Context"
         if not validate_result_schema(ground_truth.num_results, response.results):
             bt.logging.error(f"{response.miner_uid} failed schema validation: {response.miner_hotkey[:8]}")
-            return 0.0, "Invalid_Schema" 
+            return 0.0, "Invalid_Schema"
      
         valid_items = set()
         query_lower = response.query.lower().strip()
