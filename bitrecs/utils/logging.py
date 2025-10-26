@@ -157,7 +157,75 @@ def truncate_miner_log_db(since_date: datetime) -> int:
         return 0
 
 
-def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewards: np.ndarray, elected: BitrecsRequest) -> None:
+# def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewards: np.ndarray, elected: BitrecsRequest) -> None:
+#     try:        
+#         if TRUNCATE_LOGS_ENABLED:
+#             deleted = truncate_miner_log_db(datetime.now(timezone.utc) - pd.Timedelta(days=TRUNCATE_LOGS_DB_DAYS))
+#             bt.logging.trace(f"Truncated {deleted} old rows from miner log database.")
+#         frames = []
+#         for response in responses:
+#             if not isinstance(response, BitrecsRequest):
+#                 bt.logging.warning(f"Skipping invalid response type: {type(response)}")
+#                 continue
+#             response.context = ""
+#             response.user = ""
+#             data = {
+#                 **response.to_headers(),
+#                 **response.to_dict()
+#             }
+#             df = pd.json_normalize(data)
+#             if rewards is not None and len(rewards) > 0:
+#                 df['reward'] = rewards[responses.index(response)] if responses.index(response) < len(rewards) else 0.0
+#             else:
+#                 df['reward'] = 0.0
+#             frames.append(df)
+#         final = pd.concat(frames)
+
+#         batch_elected_uid = elected.miner_uid if elected and elected.miner_uid else ""
+#         batch_elected_hotkey = elected.axon.hotkey if elected and elected.axon else ""
+#         batch_elected_process_time = elected.axon.process_time if elected and elected.axon else 0
+
+#         if len(final) > 0:
+#             utc_now = datetime.now(timezone.utc)
+#             created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
+#             data_file = get_db_log_path()
+#             conn = sqlite3.connect(data_file)
+#             try:
+#                 final['step'] = step
+#                 final['created_at'] = created_at
+#                 final['batch_elected_uid'] = batch_elected_uid
+#                 final['batch_elected_hotkey'] = batch_elected_hotkey
+#                 final['batch_elected_process_time'] = batch_elected_process_time
+
+#                 dtype_dict = {col: 'TEXT' for col in final.columns}
+#                 cursor = conn.cursor()
+#                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='miner_responses';")
+#                 table_exists = cursor.fetchone() is not None                
+#                 if not table_exists:
+#                     final.to_sql('miner_responses', conn, index=False, dtype=dtype_dict)
+#                 else:                    
+#                     update_table_schema(conn, list(final.columns))
+#                     final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
+#                 conn.commit()
+#                 bt.logging.trace(f"DB Updated at step {step}")
+#             except sqlite3.Error as e:
+#                 bt.logging.error(f"SQLite error: {e}")
+#                 conn.rollback()
+#             finally:
+#                 conn.close()
+
+#         bt.logging.info(f"Miner responses logged {len(final)}")
+#     except Exception as e:
+#         bt.logging.error(f"Error in logging miner responses: {str(e)}")
+#         bt.logging.error(f"Columns in dataframe: {list(final.columns)}")
+
+
+
+def log_miner_responses_to_sql(step: int, 
+                                responses: List[BitrecsRequest], 
+                                rewards: np.ndarray = None, 
+                                reward_notes: List[str] = None, 
+                                elected: BitrecsRequest = None) -> None:
     try:        
         if TRUNCATE_LOGS_ENABLED:
             deleted = truncate_miner_log_db(datetime.now(timezone.utc) - pd.Timedelta(days=TRUNCATE_LOGS_DB_DAYS))
@@ -178,6 +246,10 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest], rewar
                 df['reward'] = rewards[responses.index(response)] if responses.index(response) < len(rewards) else 0.0
             else:
                 df['reward'] = 0.0
+            if reward_notes is not None and len(reward_notes) > 0:
+                df['reward_note'] = reward_notes[responses.index(response)] if responses.index(response) < len(reward_notes) else ""
+            else:
+                df['reward_note'] = ""
             frames.append(df)
         final = pd.concat(frames)
 

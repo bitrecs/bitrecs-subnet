@@ -444,7 +444,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     elected: BitrecsRequest = None) -> None:
         try:
             loop = asyncio.get_event_loop()
-            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, elected)
+            loop.run_in_executor(None, log_miner_responses_to_sql, self.step, responses, rewards, reward_notes, elected)
         except Exception as e:
             bt.logging.error(f"Logging failed: {e}")
 
