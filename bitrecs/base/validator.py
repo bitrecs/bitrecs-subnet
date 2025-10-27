@@ -580,27 +580,35 @@ class BaseValidatorNeuron(BaseNeuron):
                         top_scoring_responses = [pair[0] for pair in sorted_pairs[:top_scoring_limit]]
                         top_k = await self.analyze_similar_requests(top_scoring_responses)
                         if top_k:
-                            winner = secrets.choice(top_k)
-                            selected_rec = responses.index(winner)
                             entities = set([br.axon.ip for br in top_k])
                             entity_size = len(entities)
                             model_set = set([br.models_used[0] for br in top_k if br.models_used])
                             model_diversity = len(model_set)
+
+                            bt.logging.info(f"entities: {entity_size} | models: {model_diversity}")
                             if (entity_size >= CONST.MIN_UNIQUE_ENTITIES_FOR_BATCH
                                 and entity_size >= CONST.FRACTION_UNIQUE_ENTITIES_FOR_BATCH * len(top_k)
                                 and model_diversity >= CONST.MIN_UNIQUE_MODELS_FOR_BATCH
                                 and model_diversity >= CONST.FRACTION_UNIQUE_MODELS_FOR_BATCH * len(top_k)):
                                 
+                                winner = secrets.choice(top_k)
+                                selected_rec = responses.index(winner)
                                 rewards[selected_rec] *= CONSENSUS_BONUS_MULTIPLIER
                                 consensus_bonus_applied = True
                                 bt.logging.info(f"\033[1;32mConsensus Miner:{winner.miner_uid}:{winner.models_used}\033[0m")
                             else:
                                 bt.logging.warning(f"\033[33mNo consensus bonus for round, low diversity: {entity_size}:{model_diversity} \033[0m")
                         
+
+                        if selected_rec is None and len(good_indices) > 0:
+                            bt.logging.warning(f"\033[1;33mDefault No consensus from {len(responses)} responses\033[0m")
+                            selected_rec = secrets.choice(good_indices)
+                            bt.logging.trace(f"Random Default {responses[selected_rec].axon.hotkey[:8]}")
+
                         if selected_rec is None:
-                            bt.logging.error(f"\033[1;31mNo consensus rec elected in {len(responses)} responses, request aborted.\033[0m")
-                            self.update_scores(rewards, chosen_uids)
-                            self.bad_set_count += 1
+                            bt.logging.error("FATAL - No selected_rec request aborted")
+                            self.bad_set_count += 1                            
+                            reward_notes = [f"{note or ''} | Batch_Aborted".strip() for note in reward_notes]
                             self.log_responses(responses, rewards, reward_notes, None)
                             synapse_with_event.event.set()
                             continue
