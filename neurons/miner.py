@@ -230,7 +230,7 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
         finally:
             et = time.time()
-            bt.logging.trace(f"\033[1;32m{self.model} Elapsed Time: {et-st} \033[0m")
+            bt.logging.info(f"\033[1;32m{self.model} Elapsed Time: {et-st} \033[0m")
       
         #Do some cleanup - schema is validated in the reward function
         final_results = []
