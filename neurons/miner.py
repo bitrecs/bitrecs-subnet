@@ -440,12 +440,18 @@ class Miner(BaseMinerNeuron):
                 model = "gpt-4o-mini"
             case LLM.VLLM:
                 model = "NousResearch/Meta-Llama-3-8B-Instruct"                
-            case LLM.GEMINI:                                
+            case LLM.GEMINI:
                 model = "gemini-2.0-flash-001"
             case LLM.GROK:
                 model = "grok-beta"
             case LLM.CLAUDE:
                 model = "anthropic/claude-3.5-haiku"
+            case LLM.CHUTES:
+                model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+            case LLM.CEREBRAS:
+                model = "qwen-3-235b-a22b-instruct-2507"
+            case LLM.GROQ:
+                model = "qwen/qwen3-32b"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
