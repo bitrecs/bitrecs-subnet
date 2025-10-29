@@ -84,7 +84,7 @@ class LLMFactory:
             
     @staticmethod
     def try_parse_llm(value: str) -> LLM:
-        match value.upper():
+        match value.strip().upper():
             case "OLLAMA_LOCAL":
                 return LLM.OLLAMA_LOCAL
             case "OPEN_ROUTER":
@@ -104,7 +104,9 @@ class LLMFactory:
             case "CEREBRAS":
                 return LLM.CEREBRAS
             case "GROQ":
-                return LLM.GROQ                
+                return LLM.GROQ
+            case "NVIDIA":
+                return LLM.NVIDIA
             case _:
                 raise ValueError("Unknown LLM server")
         
