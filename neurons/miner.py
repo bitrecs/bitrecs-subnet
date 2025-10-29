@@ -452,6 +452,8 @@ class Miner(BaseMinerNeuron):
                 model = "qwen-3-235b-a22b-instruct-2507"
             case LLM.GROQ:
                 model = "qwen/qwen3-32b"
+            case LLM.NVIDIA:
+                model = "qwen/qwen3-next-80b-a3b-instruct"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
