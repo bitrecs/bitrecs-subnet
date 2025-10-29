@@ -57,7 +57,7 @@ def product_20k():
 
 
 @pytest.mark.asyncio
-async def test_openrouter_verified_inf():
+async def test_verified_inference():
     raw_products = product_woo()    
     #raw_products = product_shopify()
     products = ProductFactory.dedupe(raw_products)    
@@ -118,11 +118,15 @@ async def test_openrouter_verified_inf():
 
     #model = "zai-org/GLM-4.5-Air"
     #model = "Qwen/Qwen3-235B-A22B-Instruct-2507"
-    model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+    #model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
     #model = "zai-org/GLM-4.5-Air"
     #model = "MiniMaxAI/MiniMax-M2"
     #model = "Qwen/Qwen2.5-72B-Instruct"    
-    provider = LLM.CHUTES
+    #provider = LLM.CHUTES
+
+    model = "qwen/qwen3-next-80b-a3b-instruct"
+    provider = LLM.NVIDIA
+
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()

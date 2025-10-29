@@ -12,4 +12,5 @@ class LLM(Enum):
     CHUTES = 8
     CEREBRAS = 9
     GROQ = 10
+    NVIDIA = 11
 

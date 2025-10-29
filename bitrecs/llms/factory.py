@@ -11,6 +11,7 @@ from bitrecs.llms.chat_gpt import ChatGPT
 from bitrecs.llms.vllm_router import vLLM
 from bitrecs.llms.chutes import Chutes
 from bitrecs.llms.grok import Grok
+from bitrecs.llms.nvidia_inference import NvidiaInference
 from bitrecs.protocol import MinerResponse
 
 
@@ -41,7 +42,8 @@ class LLMFactory:
                 return CerebrasInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.GROQ:
                 return GroqInterface(model, system_prompt, temp).query(user_prompt)
-                
+            case LLM.NVIDIA:
+                return NvidiaInterface(model, system_prompt, temp).query(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
             
@@ -73,6 +75,8 @@ class LLMFactory:
                 raise NotImplementedError("Cerebras is not implemented yet")
             case LLM.GROQ:
                 raise NotImplementedError("Groq is not implemented yet")
+            case LLM.NVIDIA:
+                return NvidiaInterface(model, system_prompt, temp, miner_wallet, use_verified_inference).query_verified(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
             
@@ -318,3 +322,29 @@ class GroqInterface:
                          miner_wallet=self.miner_wallet, 
                          use_verified_inference=self.use_verified_inference)
         return router.call_groq(user_prompt)
+    
+
+class NvidiaInterface:
+    def __init__(self, model, system_prompt, temp, miner_wallet = None, use_verified_inference = False):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
+        self.NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY")
+        if not self.NVIDIA_API_KEY:            
+            raise ValueError("NVIDIA_API_KEY is not set")
+        self.miner_wallet = miner_wallet
+        self.use_verified_inference = use_verified_inference
+        
+    def query(self, user_prompt) -> str:
+        router = NvidiaInference(self.NVIDIA_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp, 
+                         miner_wallet=self.miner_wallet, 
+                         use_verified_inference=self.use_verified_inference)
+        return router.call_nvidia(user_prompt)
+    
+    def query_verified(self, user_prompt) -> MinerResponse:
+        router = NvidiaInference(self.NVIDIA_API_KEY, model=self.model,
+                    system_prompt=self.system_prompt, temp=self.temp, 
+                    miner_wallet=self.miner_wallet, 
+                    use_verified_inference=self.use_verified_inference)
+        return router.call_nvidia_verified(user_prompt)
