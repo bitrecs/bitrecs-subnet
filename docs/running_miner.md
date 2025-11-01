@@ -2,9 +2,8 @@
 
 This guide provides detailed instructions for setting up and configuring the Bitrecs miner on **Ubuntu 24.10 LTS**. The Bitrecs subnet is designed to be accessible to miners with varying computational resources, making it suitable for home enthusiasts, local mining operations, and industrial-scale farms.
 
-For quick deployment, you can use the installation .sh script, otherwise follow the manual guide below. Update your packages before running the install script. 
+For quick deployment, you can use the installation .sh script, otherwise follow the manual guide below. 
 ```bash
-sudo apt-get update && sudo apt-get upgrade -y
 curl -sL https://raw.githubusercontent.com/bitrecs/bitrecs-subnet/refs/heads/main/scripts/install_miner.sh | bash
 ```
 
@@ -135,10 +134,10 @@ btcli w regen_hotkey
 ```
 
 ### Subnet Registration
-Register your miner on the Bitrecs testnet UID 296:
+Register your miner on the Bitrecs mainnet UID 122:
 
 ```bash
-btcli subnet register --netuid 296 --network wss://test.finney.opentensor.ai:443 --wallet.name default --wallet.hotkey default
+btcli subnet register --netuid 122 --network finney --wallet.name default --wallet.hotkey default
 ```
 
 **Note:** Ensure your wallet.name and wallet.hotkey parameters match the names you configured during wallet creation.
@@ -173,23 +172,21 @@ The system will expect a valid GEMINI_API_KEY
 ## 8. Miner Deployment and Monitoring
 
 ### Starting the Miner Process
-Launch your miner using PM2 with comprehensive logging and monitoring:
+Launch your miner using PM2 with comprehensive logging and monitoring. We recommend running through our verified inference proxy for maximum incentives:
 
 ```bash
 pm2 start ./neurons/miner.py --name miner -- \
-        --netuid 296 \
-        --subtensor.network wss://entrypoint-finney.opentensor.ai:443 \
-        --wallet.name default \
-        --wallet.hotkey default \
-        --logging.debug \
-        --llm.provider GEMINI \	
-        --llm.model openrouter/google/gemini-2.0-flash-001 \        
-        --blacklist.force_validator_permit
+        --netuid 122 
+        --network  finney
+        --wallet.name default 
+        --wallet.hotkey default 
+        --logging.trace 
+        --llm.model x-ai/grok-4-fast
+        --verified.inference
 
 pm2 save 
 pm2 startup
 
-Reboot to ensure everything starts correctly
 ```
 
 ### Process Management and Monitoring
