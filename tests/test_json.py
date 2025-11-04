@@ -1,5 +1,7 @@
 import os
 import re
+
+from bitrecs.llms.compressor import compress_json_string
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import json_repair
@@ -592,3 +594,30 @@ def test_model_name_re():
         claned = RE_MODEL_NAME.sub("", model)
         print(f"model: {model} - cleaned: {claned}")
         assert claned == model, f"Model '{model}' did not match the regex correctly"
+
+
+
+def test_compact_product_json_20k_with_compressor():   
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
+        data = f.read()    
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
+    # assert len(products) == 18088
+
+    # context = json.dumps([asdict(products) for products in products])    
+    # tc = PromptFactory.get_token_count(context)
+    # print(f"token count: {tc}")
+    # assert 803791 == tc
+
+    context = json.dumps([asdict(products) for products in products], separators=(',', ':'))    
+    tc = PromptFactory.get_token_count(context)
+    print(f"token count: {tc}")
+    # assert 695267 == tc
+
+    # p = json.loads(context)
+    # assert len(p) == 18088
+
+
+    compressed_context = compress_json_string(context)
+    tc = PromptFactory.get_token_count(compressed_context)
+    print(f"compressed token count: {tc}")
+    assert tc < 600000

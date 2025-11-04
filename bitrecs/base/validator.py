@@ -602,8 +602,17 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         if selected_rec is None and len(good_indices) > 0:
                             bt.logging.warning(f"\033[1;33mDefault No consensus from {len(responses)} responses\033[0m")
-                            selected_rec = secrets.choice(good_indices)
-                            bt.logging.trace(f"Random Default {responses[selected_rec].axon.hotkey[:8]}")
+                            if 1==2:
+                                selected_rec = secrets.choice(good_indices)
+                                bt.logging.trace(f"Random Default {responses[selected_rec].axon.hotkey[:8]}")
+                            else:
+                                # Randomly select from top 3 scorers
+                                sorted_indices = np.argsort(good_rewards)[::-1]  # Indices of good_rewards sorted descending
+                                top_3_indices = sorted_indices[:min(3, len(sorted_indices))]  # Top 3 or all if fewer
+                                selected_good_idx = secrets.choice(top_3_indices)  # Random from top 3
+                                selected_rec = good_indices[selected_good_idx]
+                                bt.logging.trace(f"Random from top 3: {responses[selected_rec].axon.hotkey[:8]} with reward {good_rewards[selected_good_idx]:.4f}")
+                            
 
                         if selected_rec is None:
                             bt.logging.error("FATAL - No selected_rec request aborted")
@@ -626,13 +635,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if consensus_bonus_applied:
                             bt.logging.info(f"\033[1;32mCONSENSUS AWARDED\033[0m")
                         bt.logging.info(f"\033[1;32mSCORE: {rewards[selected_rec]}\033[0m")
-                        
-                        # if len(elected.results) == 0:
-                        #     bt.logging.error("FATAL - Elected response has no results")
-                        #     self.bad_set_count += 1
-                        #     synapse_with_event.event.set()
-                        #     continue
-                        
+
                         synapse_with_event.output_synapse = elected
                         synapse_with_event.event.set()
                         self.total_request_in_interval +=1
