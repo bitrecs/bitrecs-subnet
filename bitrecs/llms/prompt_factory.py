@@ -94,7 +94,7 @@ class PromptFactory:
         self.current_event = get_current_ecommerce_event(current_date=datetime.now(tz=timezone.utc)) or ""
         bt.logging.trace(f"Prompt Factory {self.sku} - {self.sku_info}, persona: {self.persona}, num_recs: {self.num_recs}, cart: {len(self.cart)}, orders: {len(self.orders)}, current_event: {self.current_event}")
 
-        if 1==1:
+        if 1==2:
             self.context = compress_json_string(self.context)
 
 
