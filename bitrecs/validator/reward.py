@@ -31,13 +31,15 @@ from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.reasoning import ReasonReport
+from bitrecs.llms.prompt_factory import PromptFactory
+
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-VERFIED_BONUS_MULTIPLIER = 1.45
+VERFIED_BONUS_MULTIPLIER = 1.15
 SUSPECT_MINER_DECAY = 0.980
 PERMITTED_CLOCK_DIFF_SECONDS = 300
 
@@ -133,7 +135,26 @@ def verify_time(response: BitrecsRequest) -> bool:
     return True
 
 
-def verify_proof(
+def validate_proof_skus(valid_skus: set, signed_response: SignedResponse) -> bool:
+    try:
+        if len(valid_skus) == 0:
+            bt.logging.error("No valid SKUs provided")
+            return False
+        response = signed_response.response
+        skus = PromptFactory.extract_skus_from_response(response) or []
+        extracted_skus = set(sku.upper().strip() for sku in skus)
+        expected_skus = set(sku.upper().strip() for sku in valid_skus)
+        if extracted_skus != expected_skus:
+            bt.logging.error(f"SKU mismatch: extracted {extracted_skus}, expected {expected_skus}")
+            return False
+        return True
+    except Exception as e:
+        bt.logging.error(f"Error in validate_proof_skus: {e}")
+        return False
+    
+
+def verify_proof_with_recs(
+    recs: set,
     response: SignedResponse,
     public_key: Ed25519PublicKey
 ) -> bool:
@@ -152,6 +173,11 @@ def verify_proof(
         if current_time > ttl_time:
             bt.logging.error(f"Proof expired: TTL {ttl_time}, current {current_time}")
             return False
+        validate_recs = validate_proof_skus(recs, response)
+        if not validate_recs:
+            bt.logging.error("SKU proof validation failed")
+            return False
+
         signed_data = {
             "proof": proof,
             "timestamp": timestamp,
@@ -162,13 +188,14 @@ def verify_proof(
         public_key.verify(signature_bytes, serialized_data)
         return True
     except InvalidSignature:
-        bt.logging.error("verify_proof Verification failed: Invalid signature")
+        bt.logging.error("verify_proof_with_recs failed: Invalid signature")
         return False
     except Exception as e:
-        bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e) or 'No message'}")
-        tb = traceback.print_exc()
-        bt.logging.error(f"Traceback:\n{tb}")
-        return False    
+        bt.logging.error(f"verify_proof_with_recs failed: {e}")
+        bt.logging.debug(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
 
 
 def reward(
@@ -285,8 +312,8 @@ def reward(
                 score_notes.append("Reasoning_Bonus")
 
         if response.verified_proof and response.verified_proof != {} and verified_public_key:
-            signed_response = SignedResponse(**response.verified_proof)
-            verified = verify_proof(signed_response, verified_public_key)
+            signed_response = SignedResponse(**response.verified_proof)            
+            verified = verify_proof_with_recs(valid_items, signed_response, verified_public_key)
             if not verified:
                 bt.logging.error(f"{response.axon.hotkey[:8]} Verified Inference Failed: {response.miner_uid}")
                 return 0.0, "Invalid_Verified_Proof"
