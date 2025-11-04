@@ -188,13 +188,12 @@ def verify_proof_with_recs(
         public_key.verify(signature_bytes, serialized_data)
         return True
     except InvalidSignature:
-        bt.logging.error("verify_proof Verification failed: Invalid signature")
+        bt.logging.error("verify_proof_with_recs failed: Invalid signature")
         return False
     except Exception as e:
-        bt.logging.error(f"verify_proof Verification failed: {type(e).__name__}: {str(e) or 'No message'}")
-        tb = traceback.print_exc()
-        bt.logging.error(f"Traceback:\n{tb}")
-        return False    
+        bt.logging.error(f"verify_proof_with_recs failed: {e}")
+        bt.logging.debug(f"Traceback: {traceback.format_exc()}")
+        return False
 
 
 
