@@ -282,3 +282,44 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
+
+
+    @staticmethod
+    def extract_skus_from_response(response_json: dict) -> List[str]:
+        """
+        Extracts a list of SKUs from an OpenAI-compatible chat completion response.
+        Handles JSON arrays wrapped in ```json ... ```, plain text, or malformed responses.
+        
+        Args:
+            response_json (dict): The full OpenAI response dict.
+        
+        Returns:
+            List[str]: A list of SKUs extracted from the response. 
+        """
+        try:            
+            if not response_json.get('choices') or len(response_json['choices']) == 0:                
+                return []
+            
+            content = response_json['choices'][0].get('message', {}).get('content', '')
+            if not content:                
+                return []
+            
+            items = PromptFactory.tryparse_llm(content)
+            if not isinstance(items, list):                
+                return []
+                        
+            skus = []
+            for item in items:
+                if isinstance(item, dict):
+                    sku = item.get('sku')
+                    if sku and isinstance(sku, str) and sku.strip():
+                        skus.append(sku.strip())
+                    else:
+                        bt.logging.warning(f"Invalid or missing 'sku' in item: {item}")
+                else:
+                    bt.logging.warning(f"Item is not a dict: {item}")
+            
+            return skus
+        except Exception as e:
+            bt.logging.error(f"Error extracting SKUs from response: {str(e)}")
+            return []
