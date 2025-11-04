@@ -2,7 +2,6 @@ import re
 import json
 import tiktoken
 import bittensor as bt
-from bitrecs.llms.compressor import compress_json_string
 import bitrecs.utils.constants as CONST
 from functools import lru_cache
 from typing import List, Optional
@@ -10,6 +9,8 @@ from datetime import datetime, timezone
 from bitrecs.commerce.user_profile import UserProfile
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.commerce.events import get_current_ecommerce_event
+from bitrecs.llms.compressor import compress_catalog
+
 
 class PromptFactory:
     
@@ -94,8 +95,11 @@ class PromptFactory:
         self.current_event = get_current_ecommerce_event(current_date=datetime.now(tz=timezone.utc)) or ""
         bt.logging.trace(f"Prompt Factory {self.sku} - {self.sku_info}, persona: {self.persona}, num_recs: {self.num_recs}, cart: {len(self.cart)}, orders: {len(self.orders)}, current_event: {self.current_event}")
 
-        if 1==2:
-            self.context = compress_json_string(self.context)
+        if CONST.COMPRESS_PROMPT_CATALOGS:
+            pre_length = len(self.context)
+            self.context = compress_catalog(self.context)
+            post_length = len(self.context)
+            bt.logging.info(f"Compressed prompt catalog from {pre_length} to {post_length}")
 
 
 

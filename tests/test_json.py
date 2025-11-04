@@ -1,7 +1,7 @@
 import os
 import re
 
-from bitrecs.llms.compressor import compress_json_string
+from bitrecs.llms.compressor import compress_catalog
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import json_repair

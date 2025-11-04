@@ -454,6 +454,8 @@ class Miner(BaseMinerNeuron):
                 model = "qwen/qwen3-32b"
             case LLM.NVIDIA:
                 model = "qwen/qwen3-next-80b-a3b-instruct"
+            case LLM.PERPLEXITY:
+                model = "sonar"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")

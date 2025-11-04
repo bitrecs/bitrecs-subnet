@@ -13,4 +13,5 @@ class LLM(Enum):
     CEREBRAS = 9
     GROQ = 10
     NVIDIA = 11
+    PERPLEXITY = 12
 

@@ -49,6 +49,7 @@ Constants:
     VERIFIED_INFERENCE_URL (str): URL for verified inference service.
     TRUNCATE_LOGS_ENABLED (bool): Flag to enable log truncation.
     TRUNCATE_LOGS_DB_DAYS (int): Number of days to retain log database entries
+    COMPRESS_PROMPT_CATALOGS (bool): Flag to enable compression of prompt catalogs.
 
 """
 
@@ -95,3 +96,4 @@ EMISSION_CONTROL_TARGET_UID = 0
 VERIFIED_INFERENCE_URL = "https://verified.bitrecs.ai" if os.environ.get("NETWORK", "") == "mainnet" else "https://testnet.verified.bitrecs.ai"
 TRUNCATE_LOGS_ENABLED = True
 TRUNCATE_LOGS_DB_DAYS = 60
+COMPRESS_PROMPT_CATALOGS = False
