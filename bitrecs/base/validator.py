@@ -200,7 +200,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.missing_evals_uids = set()
 
         self.verified_public_key : Ed25519PublicKey = None
-        self.rarity_reports = List[RarityReport] = []
+        self.rarity_reports: List[RarityReport] = []
         
         write_node_info(
             network=self.network,
