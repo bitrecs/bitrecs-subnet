@@ -725,9 +725,10 @@ def test_latest_openrouter_model():
     #model = "deepseek/deepseek-v3.2-exp"
     #model = "alibaba/tongyi-deepresearch-30b-a3b:free"
     #model = "nvidia/nemotron-nano-9b-v2:free"
-    model = "openai/gpt-5-nano"
+    #model = "openai/gpt-5-nano"
     #model = "z-ai/glm-4.5-air"
     #model = "moonshotai/kimi-k2:free"
+    model = "openrouter/polaris-alpha"
     
     provider = LLM.OPEN_ROUTER
     

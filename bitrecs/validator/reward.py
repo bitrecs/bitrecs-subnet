@@ -33,7 +33,6 @@ from bitrecs.utils import constants as CONST
 from bitrecs.utils.rarity import RarityReport
 from bitrecs.utils.reasoning import ReasoningReport
 from bitrecs.llms.prompt_factory import PromptFactory
-
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 
@@ -194,11 +193,7 @@ def verify_proof_with_recs(
     except Exception as e:
         bt.logging.error(f"verify_proof_with_recs failed: {e}")
         bt.logging.debug(f"Traceback: {traceback.format_exc()}")
-        return False
-
-
-
-        
+        return False        
 
 
 def reward(
