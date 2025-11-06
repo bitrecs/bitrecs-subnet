@@ -8,12 +8,12 @@ from bitrecs import __version__ as this_version
 
 @dataclass
 class ReasoningReport:
-    created_at: str = field(default_factory=str)
-    scored_on: str = field(default_factory=str)
-    miner_hotkey: str = field(default_factory=str)
-    f_score: float = field(default=0.0)
-    evaluated: int = field(default=0)
-    rank: int = field(default=0)
+    created_at: str = field(default_factory=str, description="Timestamp when the report was created")
+    scored_on: str = field(default_factory=str, description="Date when the score was evaluated")
+    miner_hotkey: str = field(default_factory=str, description="Miner hotkey identifier")
+    f_score: float = field(default=0.0, description="F score for reasoning tasks")
+    evaluated: int = field(default=0, description="Number of rec queries performed")
+    rank: int = field(default=0, description="Global Rank based on reasoning score")
 
     
     @staticmethod

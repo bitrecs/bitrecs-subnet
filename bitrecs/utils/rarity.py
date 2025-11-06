@@ -8,11 +8,12 @@ from bitrecs import __version__ as this_version
 
 @dataclass
 class RarityReport:
-    created_at: str = field(default_factory=str)
-    model: str = field(default_factory=str)
-    count: int = field(default=0)
-    rarity: str = field(default_factory=str)
-    bonus: float = field(default=0.0)
+    created_at: str = field(default_factory=str, description="Timestamp when the report was created")
+    model: str = field(default_factory=str, description="Model identifier")
+    count: int = field(default=0, description="Count of occurrences")
+    rarity: str = field(default_factory=str, description="Rarity classification")
+    tier: str = field(default_factory=str, description="Tier classification")
+    bonus: float = field(default=0.0, description="Bonus multiplier for rarity")
     
     @staticmethod
     def get_reports() -> List["RarityReport"]:
@@ -42,6 +43,7 @@ class RarityReport:
                     model=item.get("model", ""),
                     count=item.get("count", 0),
                     rarity=item.get("rarity", ""),
+                    tier=item.get("tier", ""),
                     bonus=item.get("bonus", 0.0)
                 )
                 reports.append(report)
