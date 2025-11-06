@@ -40,7 +40,7 @@ from cryptography.exceptions import InvalidSignature
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-VERFIED_BONUS_MULTIPLIER = 1.15
+VERIFIED_BONUS_MULTIPLIER = 1.15
 SUSPECT_MINER_DECAY = 0.980
 PERMITTED_CLOCK_DIFF_SECONDS = 300
 
@@ -319,18 +319,18 @@ def reward(
             signed_response = SignedResponse(**response.verified_proof)            
             verified = verify_proof_with_recs(valid_items, signed_response, verified_public_key)
             if not verified:
-                bt.logging.error(f"{response.axon.hotkey[:8]} VI Failed: {response.miner_uid}")
+                bt.logging.error(f"{response.axon.hotkey[:8]}|{response.miner_uid} VI Failed")
                 return 0.0, "Invalid_Verified_Proof"
             else:
                 score_notes.append("Verified_Proof_Bonus")
-                base_multiplier = VERFIED_BONUS_MULTIPLIER
+                base_multiplier = VERIFIED_BONUS_MULTIPLIER
                 signed_model = signed_response.response["model"] if signed_response.response and "model" in signed_response.response else ""
                 rarity_report = get_rarity_report(signed_model, rarity_reports)
-                rarity_class = "Common"
                 if rarity_report and rarity_report.bonus >= 1.0:
                     base_multiplier *= rarity_report.bonus
                     rarity_class = rarity_report.rarity
                     score_notes.append(f"Rarity_{rarity_class}")
+
                 score *= base_multiplier
                 bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {rarity_class}\033[0m")
         
@@ -361,7 +361,7 @@ def get_rewards(
     - responses: A list of BitrecsRequest objects containing the responses from miners.
     - reasoning_reports: A list of ReasoningReport objects containing the reasoning scores for each miner.
     - rarity_reports: A list of RarityReport objects containing the verified rarity scores for models.
-    - actions: A list of UserAction objects containing the actions performed by users.
+    - actions: A list of UserAction objects containing the actions performed by shoppers.
     - r_limit: The rlimit for responses.
     - batch_size: The number of responses in this batch.
     - entity_threshold: The threshold for considering nodes as entities.
@@ -449,14 +449,14 @@ def get_rewards(
 
     rewards = []
     reward_notes = []
+    max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
     for i, response in enumerate(responses):
         if response.axon.ip in entity_ips and not CONST.REWARD_ENTITIES:
             rewards.append(0.0)
             reward_notes.append("Entity_No_Reward")
             continue
         
-        r_report = get_reasoning_report(response, reasoning_reports)
-        max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
+        r_report = get_reasoning_report(response, reasoning_reports)        
         miner_reward, reward_note = reward(
             validator_hotkey,
             ground_truth,
@@ -555,9 +555,9 @@ def get_rarity_report(
 ) -> RarityReport | None:
     if not rarity_reports or len(rarity_reports) == 0:
         return None
-    normalized_model = model.split('/')[-1] if '/' in model else model    
+    normalized_model = model.split('/')[-1] if '/' in model else model
     report = next(
-        (r for r in rarity_reports if normalized_model in r.model),
+        (r for r in rarity_reports if r.model.lower().strip() == normalized_model.lower().strip()),
         None
     )
     return report

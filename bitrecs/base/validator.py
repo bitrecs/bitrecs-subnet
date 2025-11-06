@@ -493,7 +493,11 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not self.verified_public_key:
                             bt.logging.error("FATAL - No verified public key, skipped.")
                             synapse_with_event.event.set()
-                            continue                        
+                            continue
+                        if not self.rarity_reports or len(self.rarity_reports) <= 0:
+                            bt.logging.error("FATAL - No rarity reports, skipped.")
+                            synapse_with_event.event.set()
+                            continue
                         
                         chosen_uids : list[int] = await self.get_next_batch()
                         if len(chosen_uids) < CONST.MIN_QUERY_BATCH_SIZE:
@@ -545,16 +549,16 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
 
-                        rewards, reward_notes = get_rewards(self.wallet.hotkey.ss58_address,
-                                            ground_truth=api_request,
-                                            responses=responses,
-                                            reasoning_reports=self.reasoning_reports,
-                                            rarity_reports=self.rarity_reports,
-                                            actions=self.user_actions,
-                                            r_limit=self.r_limit,
-                                            batch_size=CONST.QUERY_BATCH_SIZE,
-                                            entity_threshold=CONST.BATCH_ENTITY_THRESHOLD,
-                                            verified_public_key=self.verified_public_key)
+                        rewards, reward_notes = get_rewards(validator_hotkey=self.wallet.hotkey.ss58_address,
+                                                            ground_truth=api_request,
+                                                            responses=responses,
+                                                            reasoning_reports=self.reasoning_reports,
+                                                            rarity_reports=self.rarity_reports,
+                                                            actions=self.user_actions,
+                                                            r_limit=self.r_limit,
+                                                            batch_size=CONST.QUERY_BATCH_SIZE,
+                                                            entity_threshold=CONST.BATCH_ENTITY_THRESHOLD,
+                                                            verified_public_key=self.verified_public_key)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards) == len(reward_notes):
                             bt.logging.error("FATAL - MISMATCH in lengths of chosen_uids, responses, rewards and reward_notes")
