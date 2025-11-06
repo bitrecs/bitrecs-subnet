@@ -45,7 +45,8 @@ from bitrecs.metrics.score_metrics import (
     check_score_health,
     run_complete_score_analysis
 )
-from bitrecs.utils.reasoning import ReasonReport
+from bitrecs.utils.reasoning import ReasoningReport
+from bitrecs.utils.rarity import RarityReport
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
@@ -352,7 +353,7 @@ class Validator(BaseValidatorNeuron):
             if not CONST.REASONING_SCORING_ENABLED:
                 return
             bt.logging.info(f"\033[35mReasoning sync ran at {int(time.time())}\033[0m")
-            reports = ReasonReport.get_reports()
+            reports = ReasoningReport.get_reports()
             if not reports or len(reports) == 0:
                 bt.logging.error("\033[31mNo reasoning reports found!\033[0m")
                 self.reasoning_reports = []
@@ -360,7 +361,7 @@ class Validator(BaseValidatorNeuron):
             self.reasoning_reports = reports
             bt.logging.info(f"Reasoning sync complete with \033[32m{len(self.reasoning_reports)}\033[0m reports")
             
-            delta = ReasonReport.get_delta_uids(reports, self.metagraph)
+            delta = ReasoningReport.get_delta_uids(reports, self.metagraph)
             self.missing_evals_uids = set(
                 uid for uid in self.total_uids
                 if uid in delta
@@ -375,9 +376,9 @@ class Validator(BaseValidatorNeuron):
   
     
     @execute_periodically(timedelta(seconds=CONST.VERFIED_KEY_SYNC_INTERVAL))
-    async def verified_sync(self):        
+    async def verified_sync(self):
 
-        async def get_verified_public_key():
+        async def get_verified_public_key() -> Ed25519PublicKey:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 public_key_response = await client.get(f"{CONST.VERIFIED_INFERENCE_URL}/public_key")
                 public_key_response.raise_for_status()
@@ -389,6 +390,8 @@ class Validator(BaseValidatorNeuron):
         self.verified_public_key = await get_verified_public_key()
         if self.verified_public_key:
             bt.logging.info(f"\033[32mVerifier key loaded for network: {self.network}\033[0m")
+            self.rarity_reports = RarityReport.get_reports()
+            bt.logging.info(f"Verifier loaded \033[32m{len(self.rarity_reports)}\033[0m rarity reports")
         else:
             bt.logging.error(f"\033[31mFailed to load verifier key for network: {self.network}\033[0m")
             raise Exception("Failed to load verifier public key")

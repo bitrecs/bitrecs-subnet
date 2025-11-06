@@ -1,11 +1,9 @@
 # Verified 🤝 Inference
 
-TLDR;
-
 Trust but verify.
 
 Miners can opt-in and proxy their LLM requests through a verifier, which will forward their request to the defined provider and respond back with a signed response + proof.
-This response with proof gets returned to the querying Validator who can independently verify the proof and adjust rewards if applicable.
+The response with proof is submitted to the querying Validator who can independently verify the proof and adjust rewards if applicable.
 
 ## Miner Setup
 
@@ -38,9 +36,9 @@ https://testnet.verified.bitrecs.ai/health
 ## Known Limitations
 
 - local miners are excluded from this implementation 
-- ed25519 keys are ephemeral and historical proofs are invalidated after rotation
+- ed25519 keys are ephemeral
 
 ## Roadmap
 
 - enable trusted local setups
-- enable multiple arms-length signers
+- enable multiple signers

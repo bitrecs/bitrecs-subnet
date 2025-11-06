@@ -30,7 +30,8 @@ from bitrecs.commerce.user_action import UserAction
 from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.utils import constants as CONST
-from bitrecs.utils.reasoning import ReasonReport
+from bitrecs.utils.rarity import RarityReport
+from bitrecs.utils.reasoning import ReasoningReport
 from bitrecs.llms.prompt_factory import PromptFactory
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -197,13 +198,16 @@ def verify_proof_with_recs(
 
 
 
+        
+
 
 def reward(
     validator_hotkey: str,
     ground_truth: BitrecsRequest,
     catalog_validator: CatalogValidator, 
     response: BitrecsRequest,
-    reasoning_report: ReasonReport = None,
+    reasoning_report: ReasoningReport = None,
+    rarity_reports: List[RarityReport] = None,
     actions: List[UserAction] = None,
     r_limit: float = 1.0,
     max_f_score: float = 1.0,
@@ -315,12 +319,20 @@ def reward(
             signed_response = SignedResponse(**response.verified_proof)            
             verified = verify_proof_with_recs(valid_items, signed_response, verified_public_key)
             if not verified:
-                bt.logging.error(f"{response.axon.hotkey[:8]} Verified Inference Failed: {response.miner_uid}")
+                bt.logging.error(f"{response.axon.hotkey[:8]} VI Failed: {response.miner_uid}")
                 return 0.0, "Invalid_Verified_Proof"
             else:
-                score *= VERFIED_BONUS_MULTIPLIER
-                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]} Verified Inference Success: {response.miner_uid}\033[0m")
                 score_notes.append("Verified_Proof_Bonus")
+                base_multiplier = VERFIED_BONUS_MULTIPLIER
+                signed_model = signed_response.response["model"] if signed_response.response and "model" in signed_response.response else ""
+                rarity_report = get_rarity_report(signed_model, rarity_reports)
+                rarity_class = "Common"
+                if rarity_report and rarity_report.bonus >= 1.0:
+                    base_multiplier *= rarity_report.bonus
+                    rarity_class = rarity_report.rarity
+                    score_notes.append(f"Rarity_{rarity_class}")
+                score *= base_multiplier
+                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {rarity_class}\033[0m")
         
         notes = " | ".join(score_notes)
         return score, notes
@@ -334,7 +346,8 @@ def get_rewards(
     validator_hotkey: str,
     ground_truth: BitrecsRequest,
     responses: List[BitrecsRequest],
-    reasoning_reports: List[ReasonReport] = None,
+    reasoning_reports: List[ReasoningReport] = None,
+    rarity_reports: List[RarityReport] = None,
     actions: List[UserAction] = None,    
     r_limit: float = 1.0,
     batch_size: int = 16,
@@ -346,6 +359,8 @@ def get_rewards(
     - validator_hotkey: The hotkey of the validator.
     - ground_truth: The BitrecsRequest object containing the ground truth query
     - responses: A list of BitrecsRequest objects containing the responses from miners.
+    - reasoning_reports: A list of ReasoningReport objects containing the reasoning scores for each miner.
+    - rarity_reports: A list of RarityReport objects containing the verified rarity scores for models.
     - actions: A list of UserAction objects containing the actions performed by users.
     - r_limit: The rlimit for responses.
     - batch_size: The number of responses in this batch.
@@ -368,6 +383,9 @@ def get_rewards(
 
     if not reasoning_reports or len(reasoning_reports) == 0:
         bt.logging.warning(f"\033[1;33m WARNING - no reasoning_reports found in get_rewards \033[0m")
+
+    if not rarity_reports or len(rarity_reports) == 0:
+        bt.logging.warning(f"\033[1;33m WARNING - no rarity_reports found in get_rewards \033[0m")
 
     if not actions or len(actions) == 0:
         bt.logging.warning(f"\033[1;33m WARNING - no actions found in get_rewards \033[0m")
@@ -439,15 +457,18 @@ def get_rewards(
         
         r_report = get_reasoning_report(response, reasoning_reports)
         max_f_score = max((r.f_score for r in reasoning_reports), default=1.0)
-        miner_reward, reward_note = reward(validator_hotkey, 
-                              ground_truth, 
-                              catalog_validator, 
-                              response, 
-                              r_report, 
-                              actions, 
-                              r_limit, 
-                              max_f_score, 
-                              verified_public_key)
+        miner_reward, reward_note = reward(
+            validator_hotkey,
+            ground_truth,
+            catalog_validator,
+            response,
+            r_report,
+            rarity_reports,
+            actions,
+            r_limit,
+            max_f_score,
+            verified_public_key
+        )       
         reward_notes.append(reward_note)
         if miner_reward <= 0.0:
             rewards.append(0.0)
@@ -514,10 +535,11 @@ def get_difficulty_statement(difficulty: float) -> str:
     else:
         return f"Difficulty is hard: \033[1;31m{difficulty:.3f}\033[0m"
     
+
 def get_reasoning_report(
     response: BitrecsRequest,
-    reasoning_reports: List[ReasonReport] = None
-) -> ReasonReport | None:
+    reasoning_reports: List[ReasoningReport] = None
+) -> ReasoningReport | None:
     if not reasoning_reports or len(reasoning_reports) == 0:
         return None
     reasoning_report = next(
@@ -525,3 +547,17 @@ def get_reasoning_report(
         None
     )
     return reasoning_report
+
+
+def get_rarity_report(
+    model: str,
+    rarity_reports: List[RarityReport] = None
+) -> RarityReport | None:
+    if not rarity_reports or len(rarity_reports) == 0:
+        return None
+    normalized_model = model.split('/')[-1] if '/' in model else model    
+    report = next(
+        (r for r in rarity_reports if normalized_model in r.model),
+        None
+    )
+    return report

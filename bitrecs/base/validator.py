@@ -52,7 +52,8 @@ from bitrecs.utils.distance import (
     rec_list_to_set, 
     select_most_similar_bitrecs
 )
-from bitrecs.utils.reasoning import ReasonReport
+from bitrecs.utils.reasoning import ReasoningReport
+from bitrecs.utils.rarity import RarityReport
 from bitrecs.utils.uids import get_all_miner_uids
 from bitrecs.validator.reward import (
     CONSENSUS_BONUS_MULTIPLIER, 
@@ -195,10 +196,11 @@ class BaseValidatorNeuron(BaseNeuron):
         self.tempo_batch_index = 0
         self.batches_completed = 0
 
-        self.reasoning_reports: List[ReasonReport] = []    
+        self.reasoning_reports: List[ReasoningReport] = []    
         self.missing_evals_uids = set()
 
         self.verified_public_key : Ed25519PublicKey = None
+        self.rarity_reports = List[RarityReport] = []
         
         write_node_info(
             network=self.network,
@@ -544,14 +546,15 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
 
                         rewards, reward_notes = get_rewards(self.wallet.hotkey.ss58_address,
-                                              ground_truth=api_request,
-                                              responses=responses,
-                                              reasoning_reports=self.reasoning_reports,
-                                              actions=self.user_actions,
-                                              r_limit=self.r_limit,
-                                              batch_size=CONST.QUERY_BATCH_SIZE,
-                                              entity_threshold=CONST.BATCH_ENTITY_THRESHOLD,
-                                              verified_public_key=self.verified_public_key)
+                                            ground_truth=api_request,
+                                            responses=responses,
+                                            reasoning_reports=self.reasoning_reports,
+                                            rarity_reports=self.rarity_reports,
+                                            actions=self.user_actions,
+                                            r_limit=self.r_limit,
+                                            batch_size=CONST.QUERY_BATCH_SIZE,
+                                            entity_threshold=CONST.BATCH_ENTITY_THRESHOLD,
+                                            verified_public_key=self.verified_public_key)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards) == len(reward_notes):
                             bt.logging.error("FATAL - MISMATCH in lengths of chosen_uids, responses, rewards and reward_notes")
@@ -634,6 +637,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info(f"\033[1;32mRESULT: {elected}\033[0m")
                         if consensus_bonus_applied:
                             bt.logging.info(f"\033[1;32mCONSENSUS AWARDED\033[0m")
+                            reward_notes[selected_rec] += " | Consensus_Bonus"
+                        else:
+                            reward_notes[selected_rec] += " | No_Consensus"
                         bt.logging.info(f"\033[1;32mSCORE: {rewards[selected_rec]}\033[0m")
 
                         synapse_with_event.output_synapse = elected

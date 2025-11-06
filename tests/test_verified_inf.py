@@ -108,10 +108,13 @@ async def test_verify_with_rec_match():
     print(f"token count: {tc}")
 
     model = "gemini-2.5-flash-lite-preview-09-2025"
-    provider = LLM.GEMINI   
+    provider = LLM.GEMINI
 
-    # model = "sonar"
+    # model = "sonar-small"
     # provider = LLM.PERPLEXITY
+
+    # model = "google/gemini-2.5-flash"
+    # provider = LLM.OPEN_ROUTER
     
     print(f"\033[32mTesting {provider} with model: {model} \033[0m")
     st = time.time()
@@ -130,7 +133,7 @@ async def test_verify_with_rec_match():
     public_key = await get_public_key()
     response = llm_response.signed_response
 
-    # # Remote verification
+    # Remote verification
     assert remote_verify_proof(response), "Remote signature verification failed"
     print(f"\033[32mREMOTE signature verification succeeded \033[0m")
 

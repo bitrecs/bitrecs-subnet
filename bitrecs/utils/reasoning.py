@@ -7,7 +7,7 @@ from bitrecs import __version__ as this_version
 
 
 @dataclass
-class ReasonReport:
+class ReasoningReport:
     created_at: str = field(default_factory=str)
     scored_on: str = field(default_factory=str)
     miner_hotkey: str = field(default_factory=str)
@@ -17,7 +17,7 @@ class ReasonReport:
 
     
     @staticmethod
-    def get_reports() -> List["ReasonReport"]:
+    def get_reports() -> List["ReasoningReport"]:
         """
         Load latest reasoning scores
         """
@@ -37,7 +37,7 @@ class ReasonReport:
                 return []
             
             for item in data:
-                report = ReasonReport(
+                report = ReasoningReport(
                     created_at=item.get("created_at", ""),
                     scored_on=item.get("scored_on", ""),
                     miner_hotkey=item.get("miner_hotkey", ""),
@@ -53,7 +53,7 @@ class ReasonReport:
         
 
     @staticmethod
-    def get_delta_uids(reports: List["ReasonReport"], metagraph: "bt.metagraph.Metagraph" ) -> List[int]:
+    def get_delta_uids(reports: List["ReasoningReport"], metagraph: "bt.metagraph.Metagraph" ) -> List[int]:
         """Find the delta of reports vs metagraph UIDs."""
         delta_uids = []
         report_hotkeys = [r.miner_hotkey.strip().lower() for r in reports]
