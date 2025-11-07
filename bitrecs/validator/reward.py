@@ -324,11 +324,11 @@ def reward(
                 if rarity_report and rarity_report.bonus >= 1.0:
                     base_multiplier *= rarity_report.bonus
                     rarity_tier = rarity_report.tier
-                    rarit_stat = rarity_report.rarity
+                    rarity_stat = rarity_report.rarity
                     score_notes.append(f"Rarity_{rarity_tier}")
 
                 score *= base_multiplier
-                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {rarity_tier} ({rarit_stat})\033[0m")
+                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {rarity_tier} ({rarity_stat})\033[0m")
         
         notes = " | ".join(score_notes)
         return score, notes
