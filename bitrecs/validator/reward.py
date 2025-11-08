@@ -317,6 +317,7 @@ def reward(
                 bt.logging.error(f"{response.axon.hotkey[:8]}|{response.miner_uid} VI Failed")
                 return 0.0, "Invalid_Verified_Proof"
             else:
+                rarity_stat, rarity_tier = "NA"
                 score_notes.append("Verified_Proof_Bonus")
                 base_multiplier = VERIFIED_BONUS_MULTIPLIER
                 signed_model = signed_response.response["model"] if signed_response.response and "model" in signed_response.response else ""
