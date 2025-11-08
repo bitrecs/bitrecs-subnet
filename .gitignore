@@ -187,3 +187,4 @@ timestamp.txt
 .env2
 node_info.json
 *.db
+pyrightconfig.json

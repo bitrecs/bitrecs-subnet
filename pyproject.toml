@@ -14,10 +14,10 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 
 dependencies = [
-    "bittensor==9.12.1",
-    "bittensor-cli==9.14.0",
+    "bittensor==10.0.0rc3",
+    "bittensor-cli==9.15.2",
     "substrate-interface==1.7.11",
-    "async-substrate-interface==1.5.8",
+    "async-substrate-interface==1.5.9",
     "cryptography==45.0.5",
     "starlette==0.37.2",
     "pydantic==2.11.7",

@@ -3,22 +3,23 @@ import httpx
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import time
-import pytest    
+import pytest
 import bittensor as bt
-from bitrecs.protocol import SignedResponse
+from dotenv import load_dotenv
+load_dotenv()
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
+from bitrecs.utils import constants as CONST
+from bitrecs.protocol import SignedResponse
 from bitrecs.commerce.product import CatalogProvider, ProductFactory
 from bitrecs.llms.factory import LLMFactory
 from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from dotenv import load_dotenv
-load_dotenv()
-from bitrecs.utils import constants as CONST
 from bitrecs.validator.reward import validate_proof_skus, verify_proof_with_recs
+
 
 VERIFIED_URL = CONST.VERIFIED_INFERENCE_URL
 TEST_WALLET = bt.Wallet(name=os.getenv("TEST_WALLET_NAME", "test_wallet_1"))
