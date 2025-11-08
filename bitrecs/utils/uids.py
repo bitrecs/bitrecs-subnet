@@ -65,103 +65,6 @@ def get_random_miner_uids(self, k: int, exclude: List[int] = None) -> np.ndarray
     uids = np.array(random.sample(available_uids, k))
     return uids
 
-    
-
-# def get_random_miner_uids2(self,
-#     k: int, 
-#     banned_coldkeys: set = None, 
-#     banned_hotkeys: set = None,
-#     banned_ips: set = None) -> list[int]:
-
-#     """Fetch random miners that meet criteria."""
-    
-#     cooldown_count = 0
-#     avail_uids = []   
-#     for uid in range(self.metagraph.n.item()):
-#         if not self.metagraph.axons[uid].is_serving:
-#             continue
-#         # if self.metagraph.validator_permit[uid] and self.metagraph.S[uid] > 1000:
-#         #     continue
-#         # if self.metagraph.S[uid] == 0:
-#         #     continue
-
-#         if banned_coldkeys and self.metagraph.axons[uid].coldkey in banned_coldkeys:
-#             cooldown_count += 1
-#             continue
-#         if banned_hotkeys and self.metagraph.axons[uid].hotkey in banned_hotkeys:
-#             cooldown_count += 1
-#             continue
-#         if banned_ips and self.metagraph.axons[uid].ip in banned_ips:
-#             cooldown_count += 1
-#             continue
-    
-#         avail_uids.append(uid)
-
-#     bt.logging.trace(f"\033[32m pre candidate_uids: {avail_uids} from k {k} \033[0m")
-#     bt.logging.trace(f"\033[33m Total banned nodes: {cooldown_count} \033[0m")
-
-#     # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
-#     if 0 < len(avail_uids) < k:
-#         bt.logging.warning(
-#             f"Requested {k} uids but only {len(avail_uids)} were available. To disable this warning reduce the sample size (--neuron.sample_size)"
-#         )
-#         return np.array(avail_uids).astype(int).tolist()
-#     elif len(avail_uids) >= k:
-#         return np.array(random.sample(avail_uids, k)).astype(int).tolist()
-#     else:
-#         return []
-
-
-
-def get_random_miner_uids3(self,
-    k: int, 
-    banned_coldkeys: set = None, 
-    banned_hotkeys: set = None,
-    banned_ips: set = None) -> Tuple[list[int], list[int]]:
-
-    """Fetch random miners that meet criteria."""    
-    
-    avail_uids = [] 
-    suspect_uids = []  
-    for uid in range(self.metagraph.n.item()):
-        if uid == 0 or uid == self.uid:
-            continue
-        if not self.metagraph.axons[uid].is_serving:
-            continue
-        this_stake = float(self.metagraph.S[uid])
-        stake_limit = float(self.config.neuron.vpermit_tao_limit)
-        if self.metagraph.validator_permit[uid] and this_stake > stake_limit:
-            continue
-        hk = self.metagraph.axons[uid].hotkey
-        if hk not in self.hotkeys:
-            continue
-        if banned_coldkeys and self.metagraph.axons[uid].coldkey in banned_coldkeys:
-            suspect_uids.append(uid)
-            continue
-        if banned_hotkeys and self.metagraph.axons[uid].hotkey in banned_hotkeys:
-            suspect_uids.append(uid)
-            continue
-        if banned_ips and self.metagraph.axons[uid].ip in banned_ips:
-            suspect_uids.append(uid)
-            continue
-    
-        avail_uids.append(uid)
-
-    suspect_uids = list(set(suspect_uids))
-    bt.logging.trace(f"\033[32mpre candidate_uids: {avail_uids} from k {k} \033[0m")    
-    bt.logging.trace(f"\033[33mcooldown nodes: {suspect_uids} \033[0m")
-
-    # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
-    if 0 < len(avail_uids) < k:
-        bt.logging.warning(
-            f"Requested {k} uids but only {len(avail_uids)} were available. To disable this warning reduce the sample size (--neuron.sample_size)"
-        )
-        return np.array(avail_uids).astype(int).tolist(), suspect_uids
-    elif len(avail_uids) >= k:
-        return np.array(random.sample(avail_uids, k)).astype(int).tolist(), suspect_uids
-    else:
-        return [], suspect_uids
-
 
 
 def get_all_miner_uids(self,   
@@ -204,7 +107,7 @@ def get_all_miner_uids(self,
     return list(set(avail_uids)), suspect_uids
 
 
-def best_uid(metagraph: bt.metagraph) -> int:
+def best_uid(metagraph: bt.Metagraph) -> int:
     """Returns the best performing UID in the metagraph."""
     return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item()) 
 

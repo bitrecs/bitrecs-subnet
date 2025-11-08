@@ -140,6 +140,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)        
         self.sync()
         
+        
         if not self.config.neuron.axon_off:
             self.serve_axon()
         else:
