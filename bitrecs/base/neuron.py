@@ -16,17 +16,12 @@
 # DEALINGS IN THE SOFTWARE.
 
 import copy
-import typing
-
 import bittensor as bt
-
 from abc import ABC, abstractmethod
-
 # Sync calls set weights and also resyncs the metagraph.
 from bitrecs.utils.config import check_config, add_args, config
 from bitrecs.utils.misc import ttl_get_block
 from bitrecs import __spec_version__ as spec_version
-from bitrecs.mock import MockSubtensor, MockMetagraph
 
 
 class BaseNeuron(ABC):
