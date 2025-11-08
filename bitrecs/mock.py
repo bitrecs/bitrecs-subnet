@@ -33,7 +33,7 @@ class MockSubtensor(bt.MockSubtensor):
             )
 
 
-class MockMetagraph(bt.metagraph):
+class MockMetagraph(bt.Metagraph):
     def __init__(self, netuid=1, network="mock", subtensor=None):
         super().__init__(netuid=netuid, network=network, sync=False)
 
@@ -49,7 +49,7 @@ class MockMetagraph(bt.metagraph):
         bt.logging.info(f"Axons: {self.axons}")
 
 
-class MockDendrite(bt.dendrite):
+class MockDendrite(bt.Dendrite):
     """
     Replaces a real bittensor network request with a mock request that just returns some static response for all axons that are passed and adds some random delay.
     """
@@ -59,7 +59,7 @@ class MockDendrite(bt.dendrite):
 
     async def forward(
         self,
-        axons: List[bt.axon],
+        axons: List[bt.Axon],
         synapse: bt.Synapse = bt.Synapse(),
         timeout: float = 12,
         deserialize: bool = True,

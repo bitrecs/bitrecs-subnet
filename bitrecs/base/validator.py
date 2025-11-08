@@ -134,7 +134,7 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
 
-        self.dendrite = bt.dendrite(wallet=self.wallet)
+        self.dendrite = bt.Dendrite(wallet=self.wallet)
         bt.logging.info(f"Dendrite: {self.dendrite}")
         
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)        
@@ -200,7 +200,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.reasoning_reports: List[ReasoningReport] = []    
         self.missing_evals_uids = set()
 
-        self.verified_public_key : Ed25519PublicKey = None
+        self.verified_public_key: Ed25519PublicKey = None
         self.rarity_reports: List[RarityReport] = []
         
         write_node_info(
@@ -290,7 +290,7 @@ class BaseValidatorNeuron(BaseNeuron):
         """Serve axon to enable external connections."""
         bt.logging.info("serving ip to chain...")
         try:
-            self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
+            self.axon = bt.Axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
             try:
                 self.subtensor.serve_axon(
                     netuid=self.config.netuid,

@@ -79,7 +79,7 @@ class Validator(BaseValidatorNeuron):
             raise Exception("Please set the BITRECS_PROXY_URL environment variable.")        
 
 
-    async def forward(self, pr : BitrecsRequest = None):
+    async def forward(self, request: BitrecsRequest = None):
         """
         Validator forward pass. Consists of:
         - Generating the query
@@ -90,7 +90,7 @@ class Validator(BaseValidatorNeuron):
         - Rewarding the miners
         - Updating the scores
         """                
-        return await forward(self, pr)
+        return await forward(self, request)
     
     
     @execute_periodically(timedelta(seconds=CONST.TEMPO_SYNC_INTERVAL))
@@ -204,11 +204,9 @@ class Validator(BaseValidatorNeuron):
     async def score_sync(self):
         """
         Enhanced score display with normalized weights and EMA insights
-        """
-        #bt.logging.trace(f"Score sync ran at {int(time.time())}")
+        """        
         bt.logging.info(f"\033[35mScore sync ran at {int(time.time())}\033[0m")
-        try:
-            # Get active scores (non-zero)
+        try:           
             active_scores = {}
             for uid, score in enumerate(self.scores):
                 if score > 0:
@@ -216,12 +214,9 @@ class Validator(BaseValidatorNeuron):
             
             if not active_scores:
                 bt.logging.info("No active scores to display")
-                return
+                return            
             
-            # Sort by score descending
             sorted_scores = sorted(active_scores.items(), key=lambda x: x[1], reverse=True)
-            
-            # Calculate statistics
             scores_array = np.array(list(active_scores.values()))
             stats = {
                 'count': len(active_scores),
@@ -294,23 +289,6 @@ class Validator(BaseValidatorNeuron):
                 self.alpha_history.append(self.last_alpha_used)
                 if len(self.alpha_history) > 50:
                     self.alpha_history = self.alpha_history[-50:]
-            
-            # Log to wandb if enabled
-            # if self.config.wandb.enabled and self.wandb:
-            #     wandb_data = {
-            #         'scores/mean': stats['mean'],
-            #         'scores/std': stats['std'],
-            #         'scores/cv': stats['cv'],
-            #         'scores/max_min_ratio': stats['max']/stats['min'],
-            #         'scores/active_count': stats['count']
-            #     }
-                
-            #     # Log top 5 scores individually
-            #     for i, (uid, score) in enumerate(sorted_scores[:5], 1):
-            #         wandb_data[f'scores/top_{i}_uid'] = uid
-            #         wandb_data[f'scores/top_{i}_score'] = score
-                
-            #     self.wandb.log(self.step, wandb_data)
             
         except Exception as e:
             bt.logging.error(f"Error in enhanced score_sync: {e}")

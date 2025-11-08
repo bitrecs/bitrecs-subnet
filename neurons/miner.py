@@ -283,7 +283,7 @@ class Miner(BaseMinerNeuron):
             miner_signature="", 
             verified_proof=miner_response.signed_response.model_dump() if miner_response and miner_response.signed_response else None
         )
-        payload_hash = self.sign_response(output_synapse)
+        payload_hash = self.compute_payload_hash(output_synapse)
         signature = self.wallet.hotkey.sign(payload_hash)
         output_synapse.miner_signature = signature.hex()
 
@@ -294,7 +294,7 @@ class Miner(BaseMinerNeuron):
         return output_synapse
     
 
-    def sign_response(self, output_synapse: BitrecsRequest) -> bytes:
+    def compute_payload_hash(self, output_synapse: BitrecsRequest) -> bytes:
         payload = {
             "name": output_synapse.name,
             "axon_hotkey": output_synapse.axon.hotkey,
