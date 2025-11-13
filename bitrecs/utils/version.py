@@ -62,7 +62,7 @@ class LocalMetadata:
             assert len(remote_commit) == 40, f"Invalid remote commit hash: {remote_commit}"
             remote_commit_hash = remote_commit[:16]
 
-        except Exception as e:
+        except Exception:
             commit_hash = "exception unknown"
 
         return LocalMetadata(

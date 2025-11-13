@@ -162,7 +162,7 @@ class Validator(BaseValidatorNeuron):
         r2_enabled = self.config.r2.sync_on
         if not r2_enabled:
             bt.logging.trace(f"R2 Sync OFF at {int(time.time())}")        
-            bt.logging.warning(f"R2 Sync is OFF set --r2.sync_on to enable")
+            bt.logging.warning("R2 Sync is OFF set --r2.sync_on to enable")
             return
 
         start_time = time.perf_counter()
@@ -191,7 +191,7 @@ class Validator(BaseValidatorNeuron):
             if sync_result:
                 bt.logging.trace(f"\033[1;32m Success - R2 updated sync_result: {sync_result} \033[0m")
             else:
-                bt.logging.error(f"\033[1;31m Failed to update R2 \033[0m")
+                bt.logging.error("\033[1;31m Failed to update R2 \033[0m")
 
         except Exception as e:
             bt.logging.error(f"Failed to update R2 with exception: {e}")
@@ -246,13 +246,13 @@ class Validator(BaseValidatorNeuron):
                 bt.logging.info(f"Max/Min ratio: {max_min_ratio:.2f}")
             
             # Display top performers
-            bt.logging.info(f"\033[1;32m=== TOP PERFORMERS ===\033[0m")
+            bt.logging.info("\033[1;32m=== TOP PERFORMERS ===\033[0m")
             for i, (uid, score) in enumerate(sorted_scores[:10], 1):
                 percentile = (len(sorted_scores) - i + 1) / len(sorted_scores) * 100
                 bt.logging.info(f"{i:2d}. UID {uid:2d}: {score:.6f} ({percentile:.1f}%)")
             
             # Display score distribution
-            bt.logging.info(f"\033[1;34m=== SCORE DISTRIBUTION ===\033[0m")
+            bt.logging.info("\033[1;34m=== SCORE DISTRIBUTION ===\033[0m")
             quartiles = np.percentile(scores_array, [25, 50, 75])
             bt.logging.info(f"Q1: {quartiles[0]:.6f} | Q2: {quartiles[1]:.6f} | Q3: {quartiles[2]:.6f}")
             iqr = quartiles[2] - quartiles[0]
@@ -347,7 +347,7 @@ class Validator(BaseValidatorNeuron):
             if len(self.missing_evals_uids) > 0:
                 bt.logging.warning(f"\033[33mReasoning evals delta: {list(self.missing_evals_uids)}\033[0m")
             else:
-                bt.logging.info(f"\033[32mAll miners have reasoning evals\033[0m")
+                bt.logging.info("\033[32mAll miners have reasoning evals\033[0m")
             
         except Exception as e:
             bt.logging.error(f"reasoning_sync Exception: {e}")

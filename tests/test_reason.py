@@ -2,7 +2,6 @@ import os
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import secrets
-import datetime
 from random import SystemRandom
 safe_random = SystemRandom()
 from datetime import datetime
@@ -388,9 +387,9 @@ def test_results_have_reasoning_tags_hybrid():
     CLOUD_COUNT = 2
     LOCAL_COUNT = 3
         
-    print(f"\n=== Hybrid Reason Tags Test ===")
+    print("\n=== Hybrid Reason Tags Test ===")
     print(f"This test is using {len(products)} products ")
-    print(f"Original Product:")
+    print("Original Product:")
     print(f"SKU: \033[32m {sku} \033[0m")
     print(f"Name: \033[32m {selected_product.name} \033[0m")
     print(f"Price: ${selected_product.price}")

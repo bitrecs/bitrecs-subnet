@@ -136,7 +136,7 @@ def truncate_miner_log_db(since_date: datetime) -> int:
     """Truncate miner log database to remove entries older than since_date."""
     data_file = get_db_log_path()
     if not os.path.exists(data_file):
-        bt.logging.error(f"No miner_responses.db found to truncate")
+        bt.logging.error("No miner_responses.db found to truncate")
         return 0
     try:
         conn = sqlite3.connect(data_file)

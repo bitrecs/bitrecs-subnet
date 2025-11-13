@@ -54,12 +54,12 @@ class ApiServer:
      
         self.proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
         if not self.proxy_url:
-            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_PROXY_URL \033[0m")
+            bt.logging.error("\033[1;31m ERROR - MISSING BITRECS_PROXY_URL \033[0m")
             raise Exception("Missing BITRECS_PROXY_URL")
         
         self.bitrecs_api_key = os.environ.get("BITRECS_API_KEY")
         if not self.bitrecs_api_key:
-            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
+            bt.logging.error("\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
             raise Exception("Missing BITRECS_API_KEY")
             
         
@@ -110,12 +110,12 @@ class ApiServer:
         self.app.include_router(self.router)
      
         try:
-            bt.logging.trace(f"\033[1;33mAPI warmup, please standby ...\033[0m")
+            bt.logging.trace("\033[1;33mAPI warmup, please standby ...\033[0m")
             self.proxy_key : bytes = get_proxy_public_key(self.proxy_url)
             self.public_key = Ed25519PublicKey.from_public_bytes(self.proxy_key)
         except Exception as e:
-            bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
-            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
+            bt.logging.error(f"\033[1;31mERROR API could not get proxy public key: {e} \033[0m")
+            bt.logging.warning("\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
             raise Exception("Could not get proxy public key")
         
         bt.logging.info(f"\033[1;32m API Server initialized on {self.network} \033[0m")
@@ -151,14 +151,14 @@ class ApiServer:
         if not hmac.compare_digest(x_signature, expected_signature):
             raise HTTPException(status_code=401, detail="Invalid signature")
                 
-        bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
+        bt.logging.info("\033[1;32m New Request Signature Verified\033[0m")
 
 
     async def verify_request_signature(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
         timestamp = int(x_timestamp)
         current_time = int(time.time())
         if current_time - timestamp > 300:
-            bt.logging.error(f"\033[1;31m Expired Request!\033[0m")
+            bt.logging.error("\033[1;31m Expired Request!\033[0m")
             raise HTTPException(status_code=401, detail="Request expired")
 
         d = {
@@ -181,23 +181,23 @@ class ApiServer:
         try:
             self.public_key.verify(signature, message)
         except InvalidSignature:
-            bt.logging.error(f"\033[1;31m Invalid signature!\033[0m")
+            bt.logging.error("\033[1;31m Invalid signature!\033[0m")
             raise HTTPException(status_code=401, detail="Invalid signature")
         
-        bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
+        bt.logging.info("\033[1;32m New Request - Signature Verified\033[0m")
     
     
     async def ping(self, request: Request):
-        bt.logging.info(f"\033[1;32m API Server ping \033[0m")
+        bt.logging.info("\033[1;32m API Server ping \033[0m")
         ts = int(time.time())        
         return JSONResponse(status_code=200, content={"detail": "pong", "ts": ts})
     
     
     async def version(self, request: Request):
-        bt.logging.info(f"\033[1;32m API Server version \033[0m")
+        bt.logging.info("\033[1;32m API Server version \033[0m")
         ts = int(time.time())
         if not self.validator.local_metadata:
-            bt.logging.error(f"\033[1;31m API Server version - No metadata \033[0m")
+            bt.logging.error("\033[1;31m API Server version - No metadata \033[0m")
             return JSONResponse(status_code=500, content={"detail": "version", "meta_data": {}, "ts": ts, "status": "meta_data error", "metrics": {}})
         v = self.validator.local_metadata.to_dict()
 
@@ -262,7 +262,7 @@ class ApiServer:
             catalog_size = len(store_catalog)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
-                bt.logging.error(f"API invalid catalog size")                
+                bt.logging.error("API invalid catalog size")
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - invalid catalog", "status_code": 400})            
             
@@ -277,7 +277,7 @@ class ApiServer:
             total_time = time.perf_counter() - st
 
             if len(response.results) == 0:
-                bt.logging.error(f"API forward_fn response has no results")                
+                bt.logging.error("API forward_fn response has no results")                
                 return JSONResponse(status_code=500,
                                     content={"detail": "error - forward", "status_code": 500})
 
@@ -342,7 +342,7 @@ class ApiServer:
             catalog_size = len(store_catalog)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
-                bt.logging.error(f"API invalid catalog size")
+                bt.logging.error("API invalid catalog size")
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - invalid catalog - size", "status_code": 400})
             
@@ -365,7 +365,7 @@ class ApiServer:
             #                         content={"detail": "error - forward", "status_code": 500})
 
             if len(response.results) != request.num_results:
-                bt.logging.error(f"API forward_fn response has a num_recs mismatch")
+                bt.logging.error("API forward_fn response has a num_recs mismatch")
                 return JSONResponse(status_code=500,
                                     content={"detail": "error - forward", "status_code": 500})
 
@@ -467,7 +467,7 @@ class ApiServer:
             bt.logging.trace(response_text)
 
             if len(response.results) != request.num_results:
-                bt.logging.error(f"API forward_fn response has a num_recs mismatch")
+                bt.logging.error("API forward_fn response has a num_recs mismatch")
                 return JSONResponse(status_code=500,
                                     content={"detail": "error - forward", "status_code": 500})            
             

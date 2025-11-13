@@ -192,7 +192,7 @@ def select_most_similar_bitrecs_threshold(rec_sets: List[BitrecsRequest], top_n:
                 selected_requests.append(rec_sets[j])
 
     # Print similarity analysis
-    print(f"\nSimilarity Analysis:")
+    print("\nSimilarity Analysis:")
     print(f"Found {len(selected_requests)} sets meeting threshold {similarity_threshold}")
     for idx, req in enumerate(selected_requests):
         model = req.models_used[0] if req.models_used else "unknown"
@@ -352,7 +352,7 @@ def display_rec_matrix(
                 output.append(f"  Distance: {dist:.4f}")
                 output.append("-" * 40)
                 if "random" in model1 or "random" in model2:
-                    output.append(f"\033[33m  ⚠️ Warning: Includes random set!\033[0m")
+                    output.append("\033[33m  ⚠️ Warning: Includes random set!\033[0m")
     
     # Add scheme-specific legend
     #output.append(f"\nLegend ({color_scheme.value}):")

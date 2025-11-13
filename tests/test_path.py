@@ -231,7 +231,7 @@ class TestRootDirEdgeCases:
 def test_root_dir_main_functionality():
     """Main test to verify ROOT_DIR from constants works as expected"""
     print(f"\n{'='*60}")
-    print(f"TESTING ROOT_DIR FROM bitrecs.utils.constants")
+    print("TESTING ROOT_DIR FROM bitrecs.utils.constants")
     print(f"{'='*60}")
     print(f"ROOT_DIR: {ROOT_DIR}")
     print(f"Exists: {ROOT_DIR.exists()}")
@@ -240,7 +240,7 @@ def test_root_dir_main_functionality():
     
     # List contents
     if ROOT_DIR.exists():
-        print(f"\nContents of ROOT_DIR:")
+        print("\nContents of ROOT_DIR:")
         try:
             for item in sorted(ROOT_DIR.iterdir()):
                 item_type = "📁" if item.is_dir() else "📄"

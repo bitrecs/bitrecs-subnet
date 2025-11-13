@@ -51,10 +51,14 @@ def test_get_word_count():
         wc = PromptFactory.get_word_count(pasta)
         print(wc)
         match i:
-            case 0: assert wc == 56
-            case 1: assert wc == 53
-            case 2: assert wc == 23
-            case 3: assert wc == 46
+            case 0: 
+                assert wc == 56
+            case 1: 
+                assert wc == 53
+            case 2: 
+                assert wc == 23
+            case 3: 
+                assert wc == 46
 
 
 def test_get_token_count():    
@@ -63,10 +67,14 @@ def test_get_token_count():
         tc = PromptFactory.get_token_count(pasta)
         print(tc)
         match i:
-            case 0: assert tc == 71
-            case 1: assert tc == 64
-            case 2: assert tc == 29
-            case 3: assert tc == 59
+            case 0: 
+                assert tc == 71
+            case 1: 
+                assert tc == 64
+            case 2: 
+                assert tc == 29
+            case 3: 
+                assert tc == 59
 
 
 def test_get_token_count_random1k_prompt():

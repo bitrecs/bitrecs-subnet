@@ -1,7 +1,6 @@
 import os
 os.environ["NEST_ASYNCIO"] = "0"
 import json
-import pytest
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()

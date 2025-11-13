@@ -2,8 +2,6 @@ import json
 import time
 import wandb
 import secrets
-import datetime
-import numpy as np
 import bittensor as bt
 from typing import Dict, Any, Optional, List, Set
 from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
@@ -469,9 +467,9 @@ def test_wandb_cluster_logging():
     CLOUD_COUNT = 3
     LOCAL_COUNT = 3
         
-    print(f"\n=== Protocol Recommendation Analysis ===")
+    print("\n=== Protocol Recommendation Analysis ===")
     print(f"This test is using {len(products)} products ")
-    print(f"Original Product:")
+    print("Original Product:")
     print(f"SKU: \033[32m {sku} \033[0m")
     print(f"Name: \033[32m {selected_product.name} \033[0m")
     print(f"Price: ${selected_product.price}")

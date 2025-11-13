@@ -1,7 +1,6 @@
 import json
 import sqlite3
 import time
-import pytest
 from typing import List
 from random import SystemRandom
 safe_random = SystemRandom()
@@ -444,9 +443,9 @@ def load_products_from_db(sql_lite_path: str, truncate_names: bool = True) -> Li
         FROM music_products;"""
         if not truncate_names:
             sql = """SELECT sku, name, price FROM music_products"""
-            print(f" \033[1;31m  Warning Loading full product names, check token limits! \033[0m")
+            print(" \033[1;31m  Warning Loading full product names, check token limits! \033[0m")
         else:
-            print(f" \033[1;33m  Product Names Truncated \033[0m")
+            print(" \033[1;33m  Product Names Truncated \033[0m")
         cursor.execute(sql)
         rows = cursor.fetchall()
         for row in rows:
@@ -699,7 +698,7 @@ def analyze_recommendations_with_sequential(sku: str, rec_skus: List[str] = None
     
     # Get sequential patterns
     sequential = predictor.find_sequential_orders(sku, rec_skus)
-    print(f"\nSequential Patterns Found:")
+    print("\nSequential Patterns Found:")
     print(f"  Customers: {sequential['summary_stats']['total_customers']}")
     print(f"  Sequential orders: {sequential['summary_stats']['total_sequential_orders']}")
     
@@ -722,13 +721,13 @@ def analyze_recommendations_with_sequential(sku: str, rec_skus: List[str] = None
     same_order_count = same_order_patterns['total_orders']
     sequential_count = sequential['summary_stats']['total_sequential_orders']
     
-    print(f"\nComprehensive Analysis:")
+    print("\nComprehensive Analysis:")
     print(f"  Same-order patterns: {same_order_count}")
     print(f"  Sequential patterns: {sequential_count}")
     
     # Show co-occurrence stats if any
     if same_order_count > 0:
-        print(f"\nSame-Order Co-occurrence Stats:")
+        print("\nSame-Order Co-occurrence Stats:")
         for rec_sku, count in same_order_patterns['co_occurrence_stats'].items():
             print(f"  {rec_sku}: appears with {sku} in {count} orders")
     

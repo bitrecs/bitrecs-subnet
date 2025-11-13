@@ -45,6 +45,7 @@ dev = [
     "pytest-asyncio",
     "black",
     "isort",
+    "ruff>=0.14.4",
 ]
 
 test = [
@@ -71,3 +72,11 @@ target-version = ['py311', 'py312']
 profile = "black"
 line_length = 100
 
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "E402",  # Module level import not at top of file    
+]

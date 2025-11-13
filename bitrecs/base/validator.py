@@ -163,7 +163,7 @@ class BaseValidatorNeuron(BaseNeuron):
             self.api_server.start()
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: http://{self.api_server.config.host}:{self.api_server.config.port} \033[0m")
         else:            
-            bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
+            bt.logging.error("\033[1;31m No API Endpoint\033[0m")
         
         self.should_exit: bool = False
         self.is_running: bool = False
@@ -213,7 +213,7 @@ class BaseValidatorNeuron(BaseNeuron):
             epoch_length=self.config.neuron.epoch_length
         )
 
-        if self.config.wandb.enabled == True:
+        if self.config.wandb.enabled:
             wandb_project = f"bitrecs_{self.network}"
             wandb_entity = self.config.wandb.entity
             if len(wandb_project) == 0 or len(wandb_entity) == 0:
@@ -641,7 +641,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info(f"\033[1;32mBATCH: {elected.site_key}\033[0m")
                         bt.logging.info(f"\033[1;32mRESULT: {elected}\033[0m")
                         if consensus_bonus_applied:
-                            bt.logging.info(f"\033[1;32mCONSENSUS AWARDED\033[0m")
+                            bt.logging.info("\033[1;32mCONSENSUS AWARDED\033[0m")
                             reward_notes[selected_rec] += " | Consensus_Bonus"
                         else:
                             reward_notes[selected_rec] += " | No_Consensus"
@@ -678,9 +678,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     await asyncio.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"API MODE - forward finished, ready for next request")                        
+                        bt.logging.info("API MODE - forward finished, ready for next request")                        
                     else:
-                        bt.logging.info(f"LIMP MODE forward finished, sleep for {45} seconds")
+                        bt.logging.info("LIMP MODE forward finished, sleep for 45 seconds")
                         await asyncio.sleep(45)
 
         except KeyboardInterrupt:
@@ -787,7 +787,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def set_weights(self):
         """Sets the validator weights to the metagraph hotkeys based on the scores."""
-        bt.logging.info(f"set_weights on chain start")
+        bt.logging.info("set_weights on chain start")
         bt.logging.trace(f"Scores: {self.scores}")
 
         if np.isnan(self.scores).any():
@@ -801,7 +801,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"\033[32mCoverage: {coverage:.2f}% \033[0m")
         min_coverage = 80
         if coverage < min_coverage:
-            bt.logging.warning(f"\033[3;3mUpdating premature weights! \033[0m")
+            bt.logging.warning("\033[3;3mUpdating premature weights! \033[0m")
             bt.logging.warning(f"\033[3;3mCoverage {coverage:.2f}% is below minimum threshold of {min_coverage:.2f}%.\033[0m")
             #return
 
@@ -971,12 +971,12 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def save_state(self):
         if self.first_sync:
-            bt.logging.info(f"Save State - first_sync = True, skipping save state.")
+            bt.logging.info("Save State - first_sync = True, skipping save state.")
             self.first_sync = False
             return
         
         if (np.all(self.scores == 0) or self.scores.size == 0):
-            bt.logging.warning(f"Score array is empty or all zeros. Skipping save state.")
+            bt.logging.warning("Score array is empty or all zeros. Skipping save state.")
             return
 
         state_path = self.config.neuron.full_path + "/state.npz"        
@@ -987,9 +987,9 @@ class BaseValidatorNeuron(BaseNeuron):
             hotkeys=self.hotkeys
         )
         if os.path.isfile(state_path):
-            bt.logging.info(f"\033[32mSave state confirmed \033[0m")
+            bt.logging.info("\033[32mSave state confirmed \033[0m")
         else:
-            bt.logging.error(f"Save state failed.")
+            bt.logging.error("Save state failed.")
             raise Exception("Save state failed, file not found after save attempt.")
 
 

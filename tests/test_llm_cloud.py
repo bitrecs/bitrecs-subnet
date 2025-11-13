@@ -233,7 +233,7 @@ def test_call_all_cloud_providers_warmup():
             print(f"provider: \033[32m {provider} PASSED \033[0m with: {model}")
             count += 1
 
-        except Exception as e:
+        except Exception:
             print(f"provider: {provider} \033[31m FAILED \033[0m using: {model}")            
             continue            
                      
@@ -298,7 +298,7 @@ def test_call_all_cloud_providers_1k_woo_products():
             success_count += 1
            
             print(f"provider: \033[32m {provider} PASSED woocommerce catalog \033[0m with: {model} in {diff:.2f} seconds")                 
-        except Exception as e:
+        except Exception:
             print(f"provider: {provider} \033[31m FAILED woocommerce catalog \033[0m using: {model}")
             continue
 
@@ -368,7 +368,7 @@ def test_call_multiple_open_router_1k_amazon_random():
             
             success_count += 1
             print(f"provider: \033[32m {this_provider} PASSED amazon \033[0m with: {model}")
-        except Exception as e:
+        except Exception:
             print(f"provider: {this_provider} \033[31m FAILED amazon \033[0m using: {model}")            
             continue
 
@@ -449,7 +449,7 @@ def test_call_multiple_open_router_amazon_5k_random():
             
             success_count += 1
             print(f"provider: \033[32m {this_provider} PASSED amazon \033[0m with: {model}")
-        except Exception as e:
+        except Exception:
             print(f"provider: {this_provider} \033[31m FAILED amazon \033[0m using: {model}")            
             continue
 

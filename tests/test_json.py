@@ -1,7 +1,4 @@
 import os
-import re
-
-from bitrecs.llms.compressor import compress_catalog
 os.environ["NEST_ASYNCIO"] = "0"
 import json
 import json_repair
@@ -82,9 +79,9 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             broken_count += 1
-        except json.decoder.JSONDecodeError as e:            
+        except json.decoder.JSONDecodeError:            
             continue
-        except jsonschema.exceptions.ValidationError as e:            
+        except jsonschema.exceptions.ValidationError:
             continue
     #print(broken_count)
     assert broken_count == 0
@@ -95,9 +92,9 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             partial_count += 1
-        except json.decoder.JSONDecodeError as e:            
+        except json.decoder.JSONDecodeError:            
             continue
-        except jsonschema.exceptions.ValidationError as e:            
+        except jsonschema.exceptions.ValidationError:
             continue
     
     assert partial_count == 1
@@ -109,9 +106,9 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             good_count += 1
-        except json.decoder.JSONDecodeError as e:            
+        except json.decoder.JSONDecodeError:
             continue
-        except jsonschema.exceptions.ValidationError as e:            
+        except jsonschema.exceptions.ValidationError:            
             continue
 
     assert good_count == len(good_json)
@@ -365,7 +362,7 @@ def test_products_must_all_have_sku():
 
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
-    assert sku_check == True
+    assert sku_check is True
 
 
 def test_products_must_all_have_sku_case_sensitive():
@@ -377,7 +374,7 @@ def test_products_must_all_have_sku_case_sensitive():
 
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
-    assert sku_check == False
+    assert sku_check is False
     
     
 def test_products_must_all_have_sku_no_upper_allowed():
@@ -389,7 +386,7 @@ def test_products_must_all_have_sku_no_upper_allowed():
 
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
-    assert sku_check == False   
+    assert sku_check is False   
     
 
 def test_products_missing_sku_error():
@@ -401,7 +398,7 @@ def test_products_missing_sku_error():
 
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
-    assert sku_check == False
+    assert sku_check is False
 
 
 
@@ -414,7 +411,7 @@ def test_schema_validation_broken_testnet_json_03_03_2025():
     '{\'sku\': \'8761139331296\', \'name\': \'Impress 16" Oscillating Stand Fan (black) IM-725B\', \'price\': \'56.91\', \'reason\': \'test\'}']
 
     is_valid = validate_result_schema(6, broken_json)
-    assert is_valid == True
+    assert is_valid is True
  
 
 def test_schema_validation_broken_testnet_json_03_03_2025_2():
@@ -474,30 +471,10 @@ def test_schema_validation_missing_reasoning():
     "{'sku': '8761138839776', 'name': 'beFree Sound Color LED Dual Gaming Speakers', 'price': '84.42', 'reason': 'test'}", 
     "{'sku': '8772908384480', 'name': 'Universal Wireless Charging Stand for Iphone Apple Watch Airpods', 'price': '40.33'}"]
     is_valid = validate_result_schema(4, broken_json)
-    assert is_valid == False
+    assert is_valid is False
 
 
-def test_compact_product_json():   
-    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
-        data = f.read()    
-    products = ProductFactory.convert(data, CatalogProvider.AMAZON)    
-    
-    assert len(products) == 907
-    context = json.dumps([asdict(products) for products in products])    
-    tc = PromptFactory.get_token_count(context)
-    print(f"token count: {tc}")
-    assert 40093 == tc
-
-    context = json.dumps([asdict(products) for products in products], separators=(',', ':'))    
-    tc = PromptFactory.get_token_count(context)
-    print(f"token count: {tc}")
-    assert 34652 == tc
-
-    p = json.loads(context)
-    assert len(p) == 907
-
-
-def test_compact_product_json():   
+def test_compact_product_json_1k():   
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = ProductFactory.convert(data, CatalogProvider.AMAZON)    
@@ -547,11 +524,11 @@ def test_catalog_validator():
 
     sku = "B00006IEBU"
     is_valid = catalog_validator.validate_sku(sku)
-    assert is_valid == True
+    assert True is is_valid
 
     sku = "B00006IEBUe"
     is_valid = catalog_validator.validate_sku(sku)
-    assert is_valid == False
+    assert False is is_valid
     
 
 def test_find_name_by_sku():

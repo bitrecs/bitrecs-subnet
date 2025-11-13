@@ -199,7 +199,7 @@ def process_weights_for_netuid(
     try:
         max_exclude = max(0, len(non_zero_weights) - min_allowed_weights) / len(non_zero_weights)
     except Exception:
-        bittensor.logging.warning(f'max_exclude calculation failed')
+        bittensor.logging.warning('max_exclude calculation failed')
         max_exclude = max(0, non_zero_weights.size - min_allowed_weights) / non_zero_weights.size
 
     exclude_quantile = min([quantile, max_exclude])

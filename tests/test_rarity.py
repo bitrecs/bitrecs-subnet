@@ -1,4 +1,3 @@
-from typing import List
 from datetime import datetime, timezone
 from bitrecs.utils.rarity import RarityReport
 from bitrecs.validator.reward import get_rarity_report

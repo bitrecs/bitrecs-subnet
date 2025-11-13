@@ -379,13 +379,13 @@ def get_rewards(
     catalog_validator = CatalogValidator(store_catalog)
 
     if not reasoning_reports or len(reasoning_reports) == 0:
-        bt.logging.warning(f"\033[1;33m WARNING - no reasoning_reports found in get_rewards \033[0m")
+        bt.logging.warning("\033[1;33m WARNING - no reasoning_reports found in get_rewards \033[0m")
 
     if not rarity_reports or len(rarity_reports) == 0:
-        bt.logging.warning(f"\033[1;33m WARNING - no rarity_reports found in get_rewards \033[0m")
+        bt.logging.warning("\033[1;33m WARNING - no rarity_reports found in get_rewards \033[0m")
 
     if not actions or len(actions) == 0:
-        bt.logging.warning(f"\033[1;33m WARNING - no actions found in get_rewards \033[0m")
+        bt.logging.warning("\033[1;33m WARNING - no actions found in get_rewards \033[0m")
 
     axon_times = []
     for response in responses:
@@ -439,10 +439,10 @@ def get_rewards(
     difficulty_statement = get_difficulty_statement(difficulty_decay)
     bt.logging.trace(f"{difficulty_statement}")
     if not CONST.DIFFICULTY_SCORING_ENABLED:
-        bt.logging.trace(f"\033[33mDifficulty adjustment skipped!\033[0m")
+        bt.logging.trace("\033[33mDifficulty adjustment skipped!\033[0m")
     
     if CONST.REASONING_SCORING_ENABLED:
-        bt.logging.trace(f"\033[32mReasoning scoring is enabled\033[0m")
+        bt.logging.trace("\033[32mReasoning scoring is enabled\033[0m")
 
     rewards = []
     reward_notes = []

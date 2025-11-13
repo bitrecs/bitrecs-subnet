@@ -38,7 +38,7 @@ async def api_key_validator(self, request: Request, call_next) -> Response:
     
     bitrecs_api_key = self.bitrecs_api_key
     if not bitrecs_api_key:
-        bt.logging.error(f"ERROR - MISSING BITRECS_API_KEY")
+        bt.logging.error("ERROR - MISSING BITRECS_API_KEY")
         return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
     if api_key != bitrecs_api_key:
         bt.logging.error(f"ERROR - INVALID API request key mismatch {request.client.host}")        

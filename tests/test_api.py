@@ -3,7 +3,6 @@ import os
 os.environ["NEST_ASYNCIO"] = "0"
 import time
 import warnings
-import pytest
 import requests
 import pandas as pd
 from bitrecs.utils.version import LocalMetadata
@@ -88,7 +87,7 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
 
 def test_can_reach_validator():    
     success = socket_ip(TEST_VALIDATOR_IP, VALIDATOR_PORT)    
-    assert success == True
+    assert success is True
 
 def test_no_auth_error_validator_root():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"    
@@ -170,7 +169,7 @@ def test_good_server_time_validator():
     assert st > 0
     current_time = int(time.time())
     over_5_minutes = current_time - st > 300
-    assert over_5_minutes == False
+    assert over_5_minutes is False
 
 
 def test_version_ok_validator():    
@@ -370,12 +369,12 @@ def test_post_node_info():
     from start_validator import post_node_report
     payload = {"bitrecs_test": "foo"}
     result = post_node_report(payload=payload)
-    assert True == result
+    assert True is result
 
 
 def test_trigger_update():
     thing = True
-    assert True == thing
+    assert True is thing
 
 
 def test_api_has_metrics():

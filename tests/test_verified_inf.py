@@ -136,7 +136,7 @@ async def test_verify_with_rec_match():
 
     # Remote verification
     assert remote_verify_proof(response), "Remote signature verification failed"
-    print(f"\033[32mREMOTE signature verification succeeded \033[0m")
+    print("\033[32mREMOTE signature verification succeeded \033[0m")
 
     parsed_recs = PromptFactory.tryparse_llm(llm_response.results)
     print(f"parsed {len(parsed_recs)} records")
@@ -151,8 +151,8 @@ async def test_verify_with_rec_match():
 
     skus2 = set([item['sku'] for item in parsed_recs])
     assert validate_proof_skus(skus2, response), "verify_proof_skus verification failed"
-    print(f"\033[32mSKU set verification succeeded \033[0m")    
+    print("\033[32mSKU set verification succeeded \033[0m")    
 
     # Local verification
     assert verify_proof_with_recs(skus2, response, public_key), "verify_proof_with_recs verification failed"
-    print(f"\033[32mFull recommendation verification succeeded \033[0m")
+    print("\033[32mFull recommendation verification succeeded \033[0m")

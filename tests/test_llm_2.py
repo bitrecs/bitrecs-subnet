@@ -1,12 +1,11 @@
 import os
 os.environ["NEST_ASYNCIO"] = "0"
 import json
-import pytest
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
-from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
+from bitrecs.commerce.product import CatalogProvider, ProductFactory
 from bitrecs.llms.factory import LLMFactory
 from bitrecs.llms.llm_provider import LLM
 from bitrecs.llms.prompt_factory import PromptFactory

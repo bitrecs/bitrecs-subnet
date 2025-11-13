@@ -4,7 +4,6 @@ import requests
 import json
 import secrets
 import bittensor as bt
-from pathlib import Path
 from urllib.parse import urlparse
 from typing import Any, Dict, Tuple
 from datetime import datetime
@@ -33,7 +32,7 @@ def is_valid_url(url: str) -> bool:
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
-    except:
+    except Exception:
         return False
     
 

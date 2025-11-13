@@ -20,7 +20,7 @@ def display_normalized_analysis(validator_instance):
         # Compute normalized scores (same as raw_weights in set_weights)
         normalized_scores = raw_scores / norm
         
-        bt.logging.info(f"\033[1;36m=== NORMALIZED WEIGHTS ===\033[0m")
+        bt.logging.info("\033[1;36m=== NORMALIZED WEIGHTS ===\033[0m")
         
         if len(raw_scores) > 0:
             min_score = np.min(raw_scores)
@@ -59,7 +59,7 @@ def display_normalized_analysis(validator_instance):
         
         # Show top normalized weights
         sorted_normalized = sorted(active_normalized.items(), key=lambda x: x[1], reverse=True)
-        bt.logging.info(f"Top 10 normalized weights:")
+        bt.logging.info("Top 10 normalized weights:")
         for i, (uid, weight) in enumerate(sorted_normalized[:10], 1):
             percentage = weight * 100
             bt.logging.info(f"  {i}. UID {uid:2d}: {weight:.6f} ({percentage:.2f}%)")
@@ -95,7 +95,7 @@ def display_ema_insights(validator_instance):
         low_alpha_usage = sum(1 for a in recent_alphas if a < low_alpha_threshold) / len(recent_alphas)
         high_alpha_usage = sum(1 for a in recent_alphas if a > default_alpha) / len(recent_alphas)
         
-        bt.logging.info(f"\033[1;36m=== EMA INSIGHTS ===\033[0m")
+        bt.logging.info("\033[1;36m=== EMA INSIGHTS ===\033[0m")
         bt.logging.info(f"Default alpha: {default_alpha:.3f}")
         bt.logging.info(f"Recent avg alpha: {avg_alpha:.3f}")
         bt.logging.info(f"Low alpha usage: {low_alpha_usage:.1%} (failure handling)")
@@ -145,7 +145,7 @@ def display_transformation_impact(validator_instance):
         moderate = moderate / np.sum(moderate)
         aggressive = aggressive / np.sum(aggressive)
         
-        bt.logging.info(f"\033[1;36m=== TRANSFORMATION IMPACT ===\033[0m")
+        bt.logging.info("\033[1;36m=== TRANSFORMATION IMPACT ===\033[0m")
         bt.logging.info(f"Scores analyzed: {len(filtered_scores)} (filtered from {len(active_scores)})")
         bt.logging.info(f"Score range: {np.min(filtered_scores):.6f} - {np.max(filtered_scores):.6f}")
         
@@ -170,7 +170,7 @@ def display_transformation_impact(validator_instance):
         
         # Warning for extreme ratios
         if linear_ratio > 1000:
-            bt.logging.warning(f"⚠️Score range detected")
+            bt.logging.warning("⚠️Score range detected")
         
     except Exception as e:
         bt.logging.error(f"Error in transformation impact: {e}")
@@ -192,7 +192,7 @@ def display_score_trends(validator_instance):
         current_leader = current['top_3'][0][0] if current['top_3'] else None
         previous_leader = previous['top_3'][0][0] if previous['top_3'] else None
         
-        bt.logging.info(f"\033[1;35m=== SCORE TRENDS ===\033[0m")
+        bt.logging.info("\033[1;35m=== SCORE TRENDS ===\033[0m")
         bt.logging.info(f"Mean change: {mean_change:+.6f}")
         bt.logging.info(f"CV change: {cv_change:+.4f} {'\033[32m(more stable)\033[0m' if cv_change < 0 else '\033[33m(less stable)\033[0m'}")
         
@@ -283,7 +283,7 @@ def check_score_health(validator_instance, stats, max_min_ratio):
             #     for rec in recommendations:
             #         bt.logging.info(f"   - {rec}")
         else:
-            bt.logging.info(f"✅ Score health: Good")
+            bt.logging.info("✅ Score health: Good")
     
     except Exception as e:
         bt.logging.error(f"Error in score health check: {e}")
@@ -299,7 +299,7 @@ def display_epoch_info(validator_instance):
         block_time = 12
         minutes_to_next_block = blocks_until_next_epoch * block_time / 60
         
-        bt.logging.info(f"\033[1;34m=== EPOCH INFO ===\033[0m")
+        bt.logging.info("\033[1;34m=== EPOCH INFO ===\033[0m")
         bt.logging.info(f"NetUID: {netuid}")
         bt.logging.info(f"Epoch start block: {epoch_start_block}")
         bt.logging.info(f"Current block: {current_block}")
@@ -314,7 +314,7 @@ def display_batch_progress(validator_instance):
     """Display progress through the current tempo's batches."""
     try:
         total_batches = len(getattr(validator_instance, "tempo_batches", []))
-        current_index = getattr(validator_instance, "tempo_batch_index", 0)
+        #current_index = getattr(validator_instance, "tempo_batch_index", 0)
         if total_batches == 0:
             bt.logging.info("No batches initialized for this tempo.")
             return
@@ -322,7 +322,7 @@ def display_batch_progress(validator_instance):
         cyan = "\033[36m"
         bold = "\033[1m"
         reset = "\033[0m"
-        bt.logging.info(f"\033[1;36m=== BATCH PROGRESS ===\033[0m")
+        bt.logging.info("\033[1;36m=== BATCH PROGRESS ===\033[0m")
         bt.logging.info(f"Total Size: {len(validator_instance.total_uids)}")
         bt.logging.info(f"Batch Size: {CONST.QUERY_BATCH_SIZE}")
         batches_completed = getattr(validator_instance, "batches_completed", 0)
@@ -375,7 +375,7 @@ def run_complete_score_analysis(validator_instance):
         display_epoch_info(validator_instance)
         display_batch_progress(validator_instance)
         display_score_histogram(validator_instance)
-        bt.logging.info(f"\033[1;36m=== SUMMARY COMPLETE ===\033[0m")
+        bt.logging.info("\033[1;36m=== SUMMARY COMPLETE ===\033[0m")
     except Exception as e:
         bt.logging.error(f"Error in complete score analysis: {e}")
         bt.logging.error(traceback.format_exc())
