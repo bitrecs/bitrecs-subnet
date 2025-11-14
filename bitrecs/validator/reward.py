@@ -151,7 +151,7 @@ def validate_proof_skus(valid_skus: set, signed_response: SignedResponse) -> boo
     except Exception as e:
         bt.logging.error(f"Error in validate_proof_skus: {e}")
         return False
-    
+
 
 def verify_proof_with_recs(
     recs: set,
@@ -177,6 +177,11 @@ def verify_proof_with_recs(
         if not validate_recs:
             bt.logging.error("SKU proof validation failed")
             return False
+        response_json = json.dumps(response.response, sort_keys=True).encode()
+        response_hash = hashlib.sha256(response_json).hexdigest()
+        if response_hash != proof["response_hash"]:
+            bt.logging.error("Response hash mismatch")
+            return False
 
         signed_data = {
             "proof": proof,
@@ -193,7 +198,7 @@ def verify_proof_with_recs(
     except Exception as e:
         bt.logging.error(f"verify_proof_with_recs failed: {e}")
         bt.logging.debug(f"Traceback: {traceback.format_exc()}")
-        return False
+        return False 
 
 
 
