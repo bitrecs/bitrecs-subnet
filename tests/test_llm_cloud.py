@@ -728,7 +728,9 @@ def test_latest_openrouter_model():
     #model = "openai/gpt-5-nano"
     #model = "z-ai/glm-4.5-air"
     #model = "moonshotai/kimi-k2:free"
-    model = "openrouter/polaris-alpha"
+    #model = "openrouter/polaris-alpha"
+    #model = "openrouter/sherlock-dash-alpha"
+    model = "openai/gpt-5.1-chat"
     
     provider = LLM.OPEN_ROUTER
     
