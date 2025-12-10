@@ -26,17 +26,17 @@ OLLAMA_MODEL = "mistral-nemo"
 map = [
     {"provider": LLM.OLLAMA_LOCAL, "model": "mistral-nemo"},
     {"provider": LLM.VLLM, "model": "NousResearch/Meta-Llama-3-8B-Instruct"},
-    {"provider": LLM.CHAT_GPT, "model": "gpt-5-nano-2025-08-07"},
+    {"provider": LLM.CHAT_GPT, "model": "gpt-5-nano"},
 
     #{"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},
     #{"provider": LLM.OPEN_ROUTER, "model": "nousresearch/deephermes-3-llama-3-8b-preview:free"},
 
     {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
     {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-preview-09-2025"},
-    {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-scout"},
+    {"provider": LLM.OPEN_ROUTER, "model": "x-ai/grok-4.1-fast"},
     {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-5-nano"},
     
-    {"provider": LLM.GROK, "model": "grok-2-latest"},
+    {"provider": LLM.GROK, "model": "grok-4-1-fast-non-reasoning"},
     {"provider": LLM.GEMINI, "model": "gemini-2.0-flash-001"},
     {"provider": LLM.CLAUDE, "model": "anthropic/claude-3.5-haiku"}
 ]
@@ -731,8 +731,8 @@ def test_latest_openrouter_model():
     #model = "openrouter/polaris-alpha"
     #model = "openrouter/sherlock-dash-alpha"
     #model = "openai/gpt-5.1-chat"
-    #model = "x-ai/grok-4.1-fast"
-    model = "openrouter/bert-nebulon-alpha"
+    model = "x-ai/grok-4.1-fast"
+    #model = "openrouter/bert-nebulon-alpha"
         
     provider = LLM.OPEN_ROUTER
     
@@ -1147,7 +1147,7 @@ def query_llm_with_timeout(server, model, system_prompt, temp, user_prompt, time
             fut.cancel()
             raise TimeoutError(f"LLM query timed out after {timeout} seconds") from e
 
-
+@pytest.mark.skip(reason="skipped - long running test")
 def test_cycle_models_and_store_results():   
     db_path = "./tests/llm_results.db"
     conn = sqlite3.connect(db_path)
