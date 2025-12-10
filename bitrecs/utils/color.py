@@ -40,3 +40,25 @@ class ColorPalette:
         }
     }
 
+
+class RarityTier(Enum):
+    COMMON = "Common"
+    MAGIC = "Magic"
+    RARE = "Rare"      
+    LEGENDARY = "Legendary"
+    UNIQUE = "Unique"    
+  
+    @staticmethod
+    def get_tier_icon(tier: str) -> str:
+        """Return a colored icon for the given tier string (case-insensitive)."""
+        tier_lower = tier.lower()
+        icons = {
+            "common": "\033[90m●Common\033[0m",             # Gray circle
+            "magic": "\033[34m●Magic\033[0m",               # Blue circle
+            "rare": "\033[35m●Rare\033[0m",                 # Purple circle
+            "legendary": "\033[38;5;208m♦Legendary\033[0m", # Orange diamond
+            "unique": "\033[1;33m★Unique\033[0m"            # Yellow star
+        }
+        return icons.get(tier_lower, "\033[91m?\033[0m")  # Default to "?" for invalid
+
+

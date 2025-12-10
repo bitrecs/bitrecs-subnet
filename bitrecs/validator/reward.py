@@ -30,6 +30,7 @@ from bitrecs.commerce.user_action import UserAction
 from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.commerce.product import Product, ProductFactory
 from bitrecs.utils import constants as CONST
+from bitrecs.utils.color import RarityTier
 from bitrecs.utils.rarity import RarityReport
 from bitrecs.utils.reasoning import ReasoningReport
 from bitrecs.llms.prompt_factory import PromptFactory
@@ -332,9 +333,10 @@ def reward(
                     rarity_tier = rarity_report.tier
                     rarity_stat = rarity_report.rarity
                     score_notes.append(f"Rarity_{rarity_tier}")
+                    tier_icon = RarityTier.get_tier_icon(rarity_tier)
 
                 score *= base_multiplier
-                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {rarity_tier} ({rarity_stat})\033[0m")
+                bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {tier_icon} ({rarity_stat})\033[0m")
         
         notes = " | ".join(score_notes)
         return score, notes
