@@ -435,15 +435,15 @@ class Miner(BaseMinerNeuron):
             case LLM.OLLAMA_LOCAL:
                 model = "mistral-nemo"                
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-2.0-flash-lite-001"
+                model = "x-ai/grok-4.1-fast"
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:
                 model = "NousResearch/Meta-Llama-3-8B-Instruct"                
             case LLM.GEMINI:
-                model = "gemini-2.0-flash-001"
+                model = "gemini-2.5-flash-lite"
             case LLM.GROK:
-                model = "grok-beta"
+                model = "grok-4-1-fast-non-reasoning"
             case LLM.CLAUDE:
                 model = "anthropic/claude-3.5-haiku"
             case LLM.CHUTES:
