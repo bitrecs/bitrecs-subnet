@@ -142,15 +142,15 @@ class Validator(BaseValidatorNeuron):
         return
        
 
-    @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
-    async def action_sync(self):
-        """
-        #TODO: This method is currently a placeholder and does not perform any actions.
+    # @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
+    # async def action_sync(self):
+    #     """
+    #     #TODO: This method is currently a placeholder and does not perform any actions.
                 
-        """
-        bt.logging.trace(f"\033[35mAction sync ran at {int(time.time())}\033[0m")
-        self.user_actions = []
-        return
+    #     """
+    #     bt.logging.trace(f"\033[35mAction sync ran at {int(time.time())}\033[0m")
+    #     self.user_actions = []
+    #     return
     
     
     @execute_periodically(timedelta(seconds=CONST.R2_SYNC_INTERVAL))
@@ -373,6 +373,18 @@ class Validator(BaseValidatorNeuron):
         else:
             bt.logging.error(f"\033[31mFailed to load verifier key for network: {self.network}\033[0m")
             raise Exception("Failed to load verifier public key")
+        
+        
+    @execute_periodically(timedelta(seconds=CONST.BACKUP_WEIGHT_SYNC_INTERVAL))
+    async def weights_sync(self):
+        """
+        Weights are synced via the Validator inbound, this is a backup sync incase inbound fails for extended periods.
+        
+        """
+        bt.logging.info(f"\033[35mWeights sync ran at {int(time.time())}\033[0m")
+        if self.should_set_weights():
+            self.set_weights()
+            bt.logging.info("Weights synchronized via weights_sync.")
 
     
 
@@ -391,8 +403,9 @@ async def main():
                 asyncio.create_task(validator.version_sync()),
                 asyncio.create_task(validator.r2_sync()),
                 asyncio.create_task(validator.cooldown_sync()),
-                asyncio.create_task(validator.reasoning_sync())
-            ]                    
+                asyncio.create_task(validator.reasoning_sync()),
+                asyncio.create_task(validator.weights_sync())
+            ]
             if validator.config.logging.trace and CONST.SCORE_DISPLAY_ENABLED:
                 tasks.append(asyncio.create_task(validator.score_sync()))
                 

@@ -23,6 +23,8 @@ Constants:
     VERSION_CHECK_INTERVAL (int): Interval for version checks.
     COOLDOWN_SYNC_INTERVAL (int): Interval for cooldown syncs.
     REASONING_SYNC_INTERVAL (int): Interval for reasoning syncs.
+    VERFIED_KEY_SYNC_INTERVAL (int): Interval for verified key syncs.
+    BACKUP_WEIGHT_SYNC_INTERVAL (int): Interval for backup weight syncs.
     CATALOG_DUPE_THRESHOLD (float): Threshold for duplicate catalog entries.
     R2_SYNC_INTERVAL (int): Interval for R2 syncs.
     RE_PRODUCT_NAME (Pattern): Regular expression for validating product names.
@@ -70,6 +72,7 @@ VERSION_CHECK_INTERVAL = 1200
 COOLDOWN_SYNC_INTERVAL = 900
 REASONING_SYNC_INTERVAL = 1800
 VERFIED_KEY_SYNC_INTERVAL = 600
+BACKUP_WEIGHT_SYNC_INTERVAL = 7200
 R2_SYNC_INTERVAL = 3600
 CATALOG_DUPE_THRESHOLD = 0.05
 RE_PRODUCT_NAME = re.compile(r"[^A-Za-z0-9 |-]")
