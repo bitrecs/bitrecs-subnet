@@ -128,7 +128,10 @@ Bitrecs does not use, collect or farm any customer data, PII or anything related
 ### Q4 2025
 - [x] reasoning scoring - 0.8.7
 - [x] verified inference - 0.8.8
-- [ ] bt v10 upgrade - 0.8.9
+- [x] world of bitrecs - 0.8.9
+
+### Q1 2026
+- [ ] prompt evolution (v2)
 
 ## Getting Started
 
