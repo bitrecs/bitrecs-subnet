@@ -643,8 +643,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if consensus_bonus_applied:
                             bt.logging.info("\033[1;32mCONSENSUS AWARDED\033[0m")
                             reward_notes[selected_rec] += " | Consensus_Bonus"
-                        else:
-                            reward_notes[selected_rec] += " | No_Consensus"                        
+                        
                         bt.logging.info(f"\033[1;32mNOTES: {reward_notes[selected_rec]}\033[0m")
                         bt.logging.info(f"\033[1;32mSCORE: {rewards[selected_rec]}\033[0m")
 
