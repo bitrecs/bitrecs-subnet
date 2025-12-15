@@ -242,7 +242,8 @@ class BaseValidatorNeuron(BaseNeuron):
         uids, cooldown_uids = get_all_miner_uids(self, 
             banned_coldkeys=self.banned_coldkeys,
             banned_hotkeys=self.banned_hotkeys,
-            banned_ips=self.banned_ips
+            banned_ips=self.banned_ips,
+            network=self.network
         )
         async with self.lock:
             self.total_uids = set(
