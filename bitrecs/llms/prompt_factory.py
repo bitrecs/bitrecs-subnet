@@ -10,7 +10,7 @@ from bitrecs.commerce.user_profile import UserProfile
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.commerce.events import get_current_ecommerce_event
 from bitrecs.llms.compressor import compress_catalog
-
+from bitrecs.protocol import SignedResponse
 
 class PromptFactory:
     
@@ -332,3 +332,26 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(f"Error extracting SKUs from response: {str(e)}")
             return []
+        
+
+    @staticmethod
+    def extract_model_from_proof(signed_response: SignedResponse) -> str:
+        """Extract and normalize model from signed_response.proof dictionary."""
+        try:
+            if not signed_response or not signed_response.proof:
+                bt.logging.warning("SignedResponse or proof is missing")
+                return ""
+            
+            model = signed_response.proof.get("model")
+            if not model:
+                bt.logging.warning("Model field is missing or empty in proof")
+                return ""
+            
+            normalized_model = model.split('/')[-1] if isinstance(model, str) and '/' in model else model
+            return normalized_model if isinstance(normalized_model, str) else ""
+        except AttributeError as e:
+            bt.logging.error(f"AttributeError accessing proof: {e}")
+            return ""
+        except Exception as e:
+            bt.logging.error(f"Unexpected error extracting model from proof: {e}")
+            return ""

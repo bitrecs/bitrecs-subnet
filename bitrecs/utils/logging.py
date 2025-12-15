@@ -9,7 +9,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
-from bitrecs.protocol import BitrecsRequest
+from bitrecs.llms.prompt_factory import PromptFactory
+from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.constants import SCHEMA_UPDATE_CUTOFF, TRUNCATE_LOGS_DB_DAYS, TRUNCATE_LOGS_ENABLED
 
@@ -187,10 +188,10 @@ def log_miner_responses_to_sql(step: int,
                 df['reward_note'] = reward_notes[responses.index(response)] if responses.index(response) < len(reward_notes) else ""
             else:
                 df['reward_note'] = ""
-            if response.verified_proof and "model" in response.verified_proof:
-                model = response.verified_proof["model"]
-                normalized_model = model.split('/')[-1] if '/' in model else model
-                df['models_used'] = json.dumps([normalized_model])
+            if response.verified_proof and "proof" in response.verified_proof:
+                signed_response = SignedResponse(**response.verified_proof)
+                model = PromptFactory.extract_model_from_proof(signed_response)
+                df['models_used'] = json.dumps([model])
             frames.append(df)
         final = pd.concat(frames)
 

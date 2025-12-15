@@ -46,7 +46,7 @@ from bitrecs.base.utils.weight_utils import (
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.config import add_validator_args
 from bitrecs.api.api_server import ApiServer
-from bitrecs.protocol import BitrecsRequest
+from bitrecs.protocol import BitrecsRequest, SignedResponse
 from bitrecs.utils.distance import (
     display_rec_matrix,    
     rec_list_to_set, 
@@ -65,6 +65,7 @@ from bitrecs.utils.logging import (
     log_miner_responses_to_sql,
     write_node_info
 )
+from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.utils.wandb import WandbHelper
 from bitrecs.commerce.user_action import UserAction
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -610,16 +611,12 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         if selected_rec is None and len(good_indices) > 0:
                             bt.logging.warning(f"\033[1;33mDefault No consensus from {len(responses)} responses\033[0m")
-                            if 1==2:
-                                selected_rec = secrets.choice(good_indices)
-                                bt.logging.trace(f"Random Default {responses[selected_rec].axon.hotkey[:8]}")
-                            else:
-                                # Randomly select from top 3 scorers
-                                sorted_indices = np.argsort(good_rewards)[::-1]  # Indices of good_rewards sorted descending
-                                top_3_indices = sorted_indices[:min(3, len(sorted_indices))]  # Top 3 or all if fewer
-                                selected_good_idx = secrets.choice(top_3_indices)  # Random from top 3
-                                selected_rec = good_indices[selected_good_idx]
-                                bt.logging.trace(f"Random from top 3: {responses[selected_rec].axon.hotkey[:8]} with reward {good_rewards[selected_good_idx]:.4f}")
+                            # Randomly select from top 3 scorers
+                            sorted_indices = np.argsort(good_rewards)[::-1]
+                            top_3_indices = sorted_indices[:min(3, len(sorted_indices))]
+                            selected_good_idx = secrets.choice(top_3_indices)
+                            selected_rec = good_indices[selected_good_idx]
+                            bt.logging.trace(f"Random from top {len(top_3_indices)}: {responses[selected_rec].axon.hotkey[:8]} with reward {good_rewards[selected_good_idx]:.4f}")
                             
 
                         if selected_rec is None:
@@ -634,10 +631,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.context = "[]"
                         elected.user = ""
                         elected.models_used = [CONST.RE_MODEL_NAME.sub("", m) for m in elected.models_used]
-                        if elected.verified_proof and "model" in elected.verified_proof:
-                            model = elected.verified_proof["model"]
-                            normalized_model = model.split('/')[-1] if '/' in model else model
-                            elected.models_used = [normalized_model]
+                        if elected.verified_proof and elected.verified_proof != {}:
+                            signed_response = SignedResponse(**elected.verified_proof)
+                            model = PromptFactory.extract_model_from_proof(signed_response)
+                            elected.models_used = [model]
                         
                         bt.logging.info(f"\033[1;32mMINER: {elected.miner_uid}\033[0m")
                         bt.logging.info(f"\033[1;32mHOTKEY: {elected.axon.hotkey[:16]}\033[0m")

@@ -199,7 +199,7 @@ def verify_proof_with_recs(
     except Exception as e:
         bt.logging.error(f"verify_proof_with_recs failed: {e}")
         bt.logging.debug(f"Traceback: {traceback.format_exc()}")
-        return False        
+        return False
 
 
 def reward(
@@ -317,7 +317,7 @@ def reward(
                 score_notes.append("Reasoning_Bonus")
 
         if response.verified_proof and response.verified_proof != {} and verified_public_key:
-            signed_response = SignedResponse(**response.verified_proof)            
+            signed_response = SignedResponse(**response.verified_proof)
             verified = verify_proof_with_recs(valid_items, signed_response, verified_public_key)
             if not verified:
                 bt.logging.error(f"{response.axon.hotkey[:8]}|{response.miner_uid} VI Failed")
@@ -326,7 +326,7 @@ def reward(
                 rarity_stat, rarity_tier = "NA"
                 score_notes.append("Verified_Proof_Bonus")
                 base_multiplier = VERIFIED_BONUS_MULTIPLIER
-                signed_model = signed_response.response["model"] if signed_response.response and "model" in signed_response.response else ""
+                signed_model = PromptFactory.extract_model_from_proof(signed_response)
                 rarity_report = get_rarity_report(signed_model, rarity_reports)
                 if rarity_report and rarity_report.bonus >= 1.0:
                     base_multiplier *= rarity_report.bonus

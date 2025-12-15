@@ -156,3 +156,23 @@ async def test_verify_with_rec_match():
     # Local verification
     assert verify_proof_with_recs(skus2, response, public_key), "verify_proof_with_recs verification failed"
     print("\033[32mFull recommendation verification succeeded \033[0m")
+
+
+def test_extract_model_from_proof():    
+    proof = {"model": "qwen/qwen3-next-80b-a3b-instruct", "provider": "NVIDIA"}
+    signed = SignedResponse(response={}, proof=proof, signature="", timestamp="2025-12-15T00:00:00Z", ttl="2025-12-15T01:00:00Z")
+    assert PromptFactory.extract_model_from_proof(signed) == "qwen3-next-80b-a3b-instruct"    
+    
+    proof = {"model": "gpt-4"}
+    signed = SignedResponse(response={}, proof=proof, signature="", timestamp="2025-12-15T00:00:00Z", ttl="2025-12-15T01:00:00Z")
+    assert PromptFactory.extract_model_from_proof(signed) == "gpt-4"    
+    
+    proof = {"provider": "NVIDIA"}
+    signed = SignedResponse(response={}, proof=proof, signature="", timestamp="2025-12-15T00:00:00Z", ttl="2025-12-15T01:00:00Z")
+    assert PromptFactory.extract_model_from_proof(signed) == ""    
+    
+    proof = {}
+    signed = SignedResponse(response={}, proof=proof, signature="", timestamp="2025-12-15T00:00:00Z", ttl="2025-12-15T01:00:00Z")
+    assert PromptFactory.extract_model_from_proof(signed) == ""    
+    
+    assert PromptFactory.extract_model_from_proof(None) == ""
