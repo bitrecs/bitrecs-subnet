@@ -70,8 +70,7 @@ def get_random_miner_uids(self, k: int, exclude: List[int] = None) -> np.ndarray
 def get_all_miner_uids(self,   
     banned_coldkeys: set = None, 
     banned_hotkeys: set = None,
-    banned_ips: set = None,
-    network: str = None) -> Tuple[list[int], list[int]]:
+    banned_ips: set = None) -> Tuple[list[int], list[int]]:
 
     """Fetch random miners that meet criteria."""    
     
@@ -98,9 +97,6 @@ def get_all_miner_uids(self,
         if banned_ips and self.metagraph.axons[uid].ip in banned_ips:
             suspect_uids.append(uid)
             continue
-        if network and network == "testnet":
-            if not self.metagraph.active[uid]:
-                continue
     
         avail_uids.append(uid)
 
