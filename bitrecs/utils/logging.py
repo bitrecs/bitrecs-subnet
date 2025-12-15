@@ -187,6 +187,10 @@ def log_miner_responses_to_sql(step: int,
                 df['reward_note'] = reward_notes[responses.index(response)] if responses.index(response) < len(reward_notes) else ""
             else:
                 df['reward_note'] = ""
+            if response.verified_proof and "model" in response.verified_proof:
+                model = response.verified_proof["model"]
+                normalized_model = model.split('/')[-1] if '/' in model else model
+                df['models_used'] = json.dumps([normalized_model])
             frames.append(df)
         final = pd.concat(frames)
 

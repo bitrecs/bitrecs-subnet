@@ -634,6 +634,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.context = "[]"
                         elected.user = ""
                         elected.models_used = [CONST.RE_MODEL_NAME.sub("", m) for m in elected.models_used]
+                        if elected.verified_proof and "model" in elected.verified_proof:
+                            model = elected.verified_proof["model"]
+                            normalized_model = model.split('/')[-1] if '/' in model else model
+                            elected.models_used = [normalized_model]
                         
                         bt.logging.info(f"\033[1;32mMINER: {elected.miner_uid}\033[0m")
                         bt.logging.info(f"\033[1;32mHOTKEY: {elected.axon.hotkey[:16]}\033[0m")
