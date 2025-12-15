@@ -504,7 +504,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         chosen_uids : list[int] = await self.get_next_batch()
                         if len(chosen_uids) < CONST.MIN_QUERY_BATCH_SIZE:
-                            bt.logging.error("\033[31m API Request- Low active miners, skipping - check your connectivity\033[0m")
+                            bt.logging.error(f"\033[31m API Request- Low active miners {len(chosen_uids)}, skipping - check your connectivity\033[0m")
                             synapse_with_event.event.set()
                             continue
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
