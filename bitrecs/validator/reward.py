@@ -40,7 +40,7 @@ from cryptography.exceptions import InvalidSignature
 BASE_REWARD = 0.80
 CONSENSUS_BONUS_MULTIPLIER = 1.05
 REASONING_BONUS_MULTIPLIER = 1.025
-VERIFIED_BONUS_MULTIPLIER = 1.15
+VERIFIED_BONUS_PERCENTAGE = 0.15
 SUSPECT_MINER_DECAY = 0.980
 PERMITTED_CLOCK_DIFF_SECONDS = 300
 
@@ -323,19 +323,22 @@ def reward(
                 bt.logging.error(f"{response.axon.hotkey[:8]}|{response.miner_uid} VI Failed")
                 return 0.0, "Invalid_Verified_Proof"
             else:
-                rarity_stat, rarity_tier = "NA"
+                rarity_stat, rarity_tier, tier_icon = "NA", "NA", "NA"
                 score_notes.append("Verified_Proof_Bonus")
-                base_multiplier = VERIFIED_BONUS_MULTIPLIER
                 signed_model = PromptFactory.extract_model_from_proof(signed_response)
+                if not signed_model:
+                    bt.logging.warning(f"{response.axon.hotkey[:8]}|{response.miner_uid} Unable to extract model from proof")
                 rarity_report = get_rarity_report(signed_model, rarity_reports)
                 if rarity_report and rarity_report.bonus >= 1.0:
-                    base_multiplier *= rarity_report.bonus
+                    bonus_amount = score * VERIFIED_BONUS_PERCENTAGE * rarity_report.bonus
                     rarity_tier = rarity_report.tier
                     rarity_stat = rarity_report.rarity
                     score_notes.append(f"Rarity_{rarity_tier}")
                     tier_icon = RarityTier.get_tier_icon(rarity_tier)
-
-                score *= base_multiplier
+                else:
+                    bonus_amount = score * VERIFIED_BONUS_PERCENTAGE
+        
+                score += bonus_amount
                 bt.logging.trace(f"\033[32m{response.axon.hotkey[:8]}|{response.miner_uid} VI Success, Rarity: {tier_icon} ({rarity_stat})\033[0m")
         
         notes = " | ".join(score_notes)
@@ -558,6 +561,8 @@ def get_rarity_report(
     rarity_reports: List[RarityReport] = None
 ) -> RarityReport | None:
     if not rarity_reports or len(rarity_reports) == 0:
+        return None
+    if not model or model.strip() == "":
         return None
     normalized_model = model.split('/')[-1] if '/' in model else model
     report = next(
