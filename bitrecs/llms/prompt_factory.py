@@ -14,7 +14,7 @@ from bitrecs.protocol import SignedResponse
 
 class PromptFactory:
     
-    SEASON = "fall/winter"
+    SEASON = "spring/summer"
     ENGINE_MODE = "complimentary"  #similar, sequential
     
     SEASON_EMPHASIS = 0.0
